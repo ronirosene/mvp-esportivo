@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { eventsApi, type EventData } from '@/services/events';
 import { eventSportsApi } from '@/services/event-sports';
 import { eventSportCitiesApi } from '@/services/event-sport-cities';
+import { api } from '@/services/api';
 
 const STATUS_LABEL: Record<string, string> = {
   PLANEJAMENTO: 'Planejamento',
@@ -23,6 +24,7 @@ export default function PublicHome() {
   const [events, setEvents] = useState<EventData[]>([]);
   const [counts, setCounts] = useState<Record<string, { sports: number; cities: number }>>({});
   const [loading, setLoading] = useState(true);
+  const [todayMatches, setTodayMatches] = useState<any[]>([]);
 
   useEffect(() => {
     async function load() {
@@ -42,6 +44,10 @@ export default function PublicHome() {
           } catch { c[evt.id] = { sports: 0, cities: 0 }; }
         }
         setCounts(c);
+        try {
+          const td = await api<any[]>('/public/schedule/today');
+          setTodayMatches(td);
+        } catch {}
       } catch {} finally { setLoading(false); }
     }
     load();
@@ -59,6 +65,35 @@ export default function PublicHome() {
         <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">Eventos Esportivos</h1>
         <p className="mt-2 text-muted-foreground">Acompanhe resultados, classificação e jogos ao vivo.</p>
       </section>
+
+      {todayMatches.length > 0 && (
+        <section>
+          <div className="mb-3 flex items-center justify-between">
+            <h2 className="text-lg font-semibold">Jogos de Hoje</h2>
+            <button
+              className="text-xs font-medium text-muted-foreground hover:text-foreground"
+              onClick={() => router.push('/agenda')}
+            >
+              Ver Agenda Completa
+            </button>
+          </div>
+          <div className="space-y-2">
+            {todayMatches.slice(0, 4).map((m: any) => (
+              <div key={m.id} className="flex items-center justify-between rounded-lg border px-4 py-3 text-sm transition-colors hover:bg-muted/30">
+                <div className="flex items-center gap-3">
+                  <span className="font-semibold tabular-nums text-muted-foreground">
+                    {m.matchDate ? new Date(m.matchDate).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : ''}
+                  </span>
+                  <span>{m.homeCity.nome}</span>
+                  <span className="text-xs text-muted-foreground">vs</span>
+                  <span>{m.awayCity.nome}</span>
+                </div>
+                <span className="text-xs text-muted-foreground">{m.eventSport?.sport?.nome}</span>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       {loading ? (
         <p className="text-center text-muted-foreground">Carregando eventos...</p>
