@@ -139,7 +139,15 @@ export default function ModalidadePublicDetail() {
 
       {playoffMatches.length > 0 && Object.keys(groupedPlayoffs).length > 0 && (
         <div>
-          <h2 className="mb-3 text-lg font-semibold">Mata-Mata</h2>
+          <div className="mb-3 flex items-center justify-between">
+            <h2 className="text-lg font-semibold">Mata-Mata</h2>
+            <button
+              className="rounded-md bg-muted px-3 py-1.5 text-xs font-medium hover:bg-muted/80"
+              onClick={() => router.push(`/eventos/${params.id}/modalidades/${params.modalidadeId}/mata-mata`)}
+            >
+              Ver Chaveamento
+            </button>
+          </div>
           <div className="space-y-4">
             {Object.entries(groupedPlayoffs).map(([fase, ms]) => (
               <div key={fase}>

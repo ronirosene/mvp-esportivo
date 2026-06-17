@@ -29,4 +29,10 @@ export class PlayoffsController {
   advance(@Param('eventSportId') eventSportId: string) {
     return this.playoffsService.advance(eventSportId);
   }
+
+  @Get('bracket')
+  @ApiOperation({ summary: 'Obter bracket do mata-mata (estruturado por fase)' })
+  getBracket(@Param('eventSportId') eventSportId: string) {
+    return this.playoffsService.getBracket(eventSportId);
+  }
 }

@@ -202,4 +202,19 @@ export class PlayoffsService {
 
     return this.findByEventSport(eventSportId);
   }
+
+  async getBracket(eventSportId: string) {
+    this.checkDb();
+    const matches = await this.prisma.match.findMany({
+      where: { eventSportId, fase: { not: 'GRUPOS' } },
+      include: { homeCity: true, awayCity: true },
+      orderBy: [{ round: 'asc' as const }, { displayOrder: 'asc' as const }, { createdAt: 'asc' as const }],
+    });
+    return {
+      quarters: matches.filter((m) => m.fase === 'QUARTAS'),
+      semifinals: matches.filter((m) => m.fase === 'SEMIFINAL'),
+      final: matches.find((m) => m.fase === 'FINAL') || null,
+      thirdPlace: matches.find((m) => m.fase === 'TERCEIRO_LUGAR') || null,
+    };
+  }
 }
