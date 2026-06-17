@@ -4,7 +4,7 @@ const nextConfig = {
     return [
       {
         source: '/api/:path*',
-        destination: `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/v1/:path*`,
+        destination: 'https://mvp-backend-little-woodland-6494.fly.dev/api/v1/:path*',
       },
     ];
   },
