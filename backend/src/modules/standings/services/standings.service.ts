@@ -124,6 +124,8 @@ export class StandingsService {
     this.checkDb();
     const match = await this.prisma.match.findUnique({ where: { id: matchId } });
     if (!match) return;
-    await this.recalculateGroup(match.groupId);
+    if (match.groupId) {
+      await this.recalculateGroup(match.groupId);
+    }
   }
 }

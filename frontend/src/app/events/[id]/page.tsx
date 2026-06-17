@@ -6,6 +6,8 @@ import { eventsApi, type EventData } from '@/services/events';
 import { eventSportsApi, type EventSportData } from '@/services/event-sports';
 import { eventSportCitiesApi, type EventSportCityData } from '@/services/event-sport-cities';
 import { eventSportGroupsApi, type GroupData } from '@/services/event-sport-groups';
+import { playoffsApi } from '@/services/playoffs';
+import type { MatchData } from '@/services/matches';
 import { useAuth } from '@/contexts/auth-context';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
@@ -24,6 +26,7 @@ export default function EventDetailPage() {
   const [sports, setSports] = useState<EventSportData[]>([]);
   const [participants, setParticipants] = useState<Record<string, EventSportCityData[]>>({});
   const [groups, setGroups] = useState<Record<string, GroupData[]>>({});
+const [playoffs, setPlayoffs] = useState<Record<string, MatchData[]>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -74,6 +77,18 @@ export default function EventDetailPage() {
     setGroups(result);
   }, []);
 
+  const fetchPlayoffs = useCallback(async (sportsData: EventSportData[]) => {
+    const result: Record<string, MatchData[]> = {};
+    for (const es of sportsData) {
+      try {
+        result[es.id] = await playoffsApi.list(es.id);
+      } catch {
+        result[es.id] = [];
+      }
+    }
+    setPlayoffs(result);
+  }, []);
+
   useEffect(() => {
     async function load() {
       await fetchEvent();
@@ -81,6 +96,7 @@ export default function EventDetailPage() {
       if (sportsData.length > 0) {
         fetchParticipants(sportsData);
         fetchGroups(sportsData);
+        fetchPlayoffs(sportsData);
       }
     }
     load();
@@ -148,6 +164,41 @@ export default function EventDetailPage() {
       fetchGroups(sports);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro ao excluir grupos');
+    }
+  }
+
+  async function handleGeneratePlayoffs(eventSportId: string) {
+    try {
+      await playoffsApi.generate(eventSportId);
+      fetchPlayoffs(sports);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erro ao gerar eliminatórias');
+    }
+  }
+
+  async function handleAdvancePlayoffs(eventSportId: string) {
+    try {
+      await playoffsApi.advance(eventSportId);
+      fetchPlayoffs(sports);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erro ao avançar fase');
+    }
+  }
+
+  async function handleUpdateConfig(eventSportId: string) {
+    const countStr = prompt('Classificados por grupo? (padrão: 2)');
+    if (!countStr) return;
+    const count = parseInt(countStr, 10);
+    if (isNaN(count) || count < 1) return;
+    const third = window.confirm('Gerar partida de terceiro lugar?');
+    try {
+      await playoffsApi.updateConfig(params.id as string, eventSportId, {
+        classificationCount: count,
+        generateThirdPlace: third,
+      });
+      fetchPlayoffs(sports);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erro ao salvar configuração');
     }
   }
 
@@ -251,6 +302,13 @@ export default function EventDetailPage() {
                       </div>
                     )}
                     <div className="border-t px-3 py-2">
+                      {token && (
+                        <div className="flex gap-2 mb-2">
+                          <Button variant="outline" size="sm" onClick={() => handleUpdateConfig(es.id)}>
+                            Config. Eliminatórias
+                          </Button>
+                        </div>
+                      )}
                       <h4 className="text-xs font-semibold uppercase text-muted-foreground mb-2">Grupos</h4>
                       {token && (
                         <div className="flex gap-2 mb-2">
@@ -284,6 +342,35 @@ export default function EventDetailPage() {
                               <Button variant="link" size="sm" className="h-auto p-0 text-xs mt-1" onClick={() => router.push(`/events/${event.id}/sports/${es.id}/groups/${g.id}`)}>
                                 Ver Partidas
                               </Button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                    <div className="border-t px-3 py-2">
+                      <h4 className="text-xs font-semibold uppercase text-muted-foreground mb-2">Eliminatórias</h4>
+                      {token && (
+                        <div className="flex gap-2 mb-2">
+                          <Button variant="outline" size="sm" onClick={() => handleGeneratePlayoffs(es.id)}>
+                            Gerar Eliminatórias
+                          </Button>
+                          {(playoffs[es.id]?.length ?? 0) > 0 && (
+                            <Button variant="outline" size="sm" onClick={() => handleAdvancePlayoffs(es.id)}>
+                              Avançar Fase
+                            </Button>
+                          )}
+                        </div>
+                      )}
+                      {!playoffs[es.id] || playoffs[es.id].length === 0 ? (
+                        <p className="text-xs text-muted-foreground">Nenhum confronto gerado.</p>
+                      ) : (
+                        <div className="space-y-2">
+                          {playoffs[es.id].map((m) => (
+                            <div key={m.id} className="flex items-center justify-between rounded-md border bg-muted/20 px-3 py-1.5 text-sm">
+                              <span>{m.homeCity.nome} ({m.homeCity.siglaEstado})</span>
+                              <span className="text-xs font-semibold uppercase text-muted-foreground">vs</span>
+                              <span>{m.awayCity.nome} ({m.awayCity.siglaEstado})</span>
+                              <span className="text-xs text-muted-foreground capitalize">{m.status === 'FINISHED' ? `${m.homeScore ?? '?'} x ${m.awayScore ?? '?'}` : m.fase.toLowerCase()}</span>
                             </div>
                           ))}
                         </div>

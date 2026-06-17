@@ -41,7 +41,7 @@ export class MatchesController {
   @ApiOperation({ summary: 'Atualizar partida' })
   async update(@Param('id') id: string, @Body() dto: UpdateMatchDto) {
     const match = await this.matchesService.update(id, dto);
-    if (match.status === 'FINISHED') {
+    if (match.status === 'FINISHED' && match.groupId) {
       await this.standingsService.recalculateGroup(match.groupId);
     }
     return match;

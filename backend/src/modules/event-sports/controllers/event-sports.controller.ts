@@ -1,7 +1,8 @@
-import { Controller, Get, Post, Delete, Body, Param, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { EventSportsService } from '../services/event-sports.service';
 import { CreateEventSportDto } from '../dto/create-event-sport.dto';
+import { UpdateEventSportDto } from '../dto/update-event-sport.dto';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 
 @ApiTags('Event Sports')
@@ -21,6 +22,14 @@ export class EventSportsController {
   @ApiOperation({ summary: 'Vincular modalidade ao evento' })
   create(@Param('eventId') eventId: string, @Body() dto: CreateEventSportDto) {
     return this.eventSportsService.create(eventId, dto.sportId);
+  }
+
+  @Put(':id')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Atualizar configuração da modalidade no evento' })
+  update(@Param('id') id: string, @Body() dto: UpdateEventSportDto) {
+    return this.eventSportsService.update(id, dto);
   }
 
   @Delete(':sportId')

@@ -10,8 +10,9 @@ import { EventSportCitiesModule } from './modules/event-sport-cities/event-sport
 import { GroupsModule } from './modules/groups/groups.module';
 import { MatchesModule } from './modules/matches/matches.module';
 import { StandingsModule } from './modules/standings/standings.module';
+import { PlayoffsModule } from './modules/playoffs/playoffs.module';
 
 @Module({
-  imports: [EnvConfigModule, PrismaModule, HealthModule, AuthModule, EventsModule, EventSportsModule, CitiesModule, EventSportCitiesModule, GroupsModule, MatchesModule, StandingsModule],
+  imports: [EnvConfigModule, PrismaModule, HealthModule, AuthModule, EventsModule, EventSportsModule, CitiesModule, EventSportCitiesModule, GroupsModule, MatchesModule, StandingsModule, PlayoffsModule],
 })
 export class AppModule {}

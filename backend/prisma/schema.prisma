@@ -76,10 +76,12 @@ model Sport {
 }
 
 model EventSport {
-  id        String   @id @default(uuid()) @db.Uuid
-  eventId   String   @db.Uuid
-  sportId   String   @db.Uuid
-  createdAt DateTime @default(now())
+  id                  String   @id @default(uuid()) @db.Uuid
+  eventId             String   @db.Uuid
+  sportId             String   @db.Uuid
+  classificationCount Int      @default(2)
+  generateThirdPlace  Boolean  @default(true)
+  createdAt           DateTime @default(now())
 
   event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
   sport Sport @relation(fields: [sportId], references: [id], onDelete: Restrict)
@@ -164,7 +166,7 @@ model GroupParticipant {
 
 model Match {
   id           String       @id @default(uuid()) @db.Uuid
-  groupId      String       @db.Uuid
+  groupId      String?      @db.Uuid
   eventSportId String       @db.Uuid
   homeCityId   String       @db.Uuid
   awayCityId   String       @db.Uuid
@@ -177,7 +179,7 @@ model Match {
   createdAt    DateTime     @default(now())
   updatedAt    DateTime     @updatedAt
 
-  group      Group      @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  group      Group?     @relation(fields: [groupId], references: [id], onDelete: Cascade)
   eventSport EventSport @relation(fields: [eventSportId], references: [id], onDelete: Cascade)
   homeCity   City       @relation("homeMatches", fields: [homeCityId], references: [id], onDelete: Restrict)
   awayCity   City       @relation("awayMatches", fields: [awayCityId], references: [id], onDelete: Restrict)

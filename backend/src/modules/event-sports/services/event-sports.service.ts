@@ -42,6 +42,14 @@ export class EventSportsService {
     });
   }
 
+  async update(id: string, dto: { classificationCount?: number; generateThirdPlace?: boolean }) {
+    this.checkDb();
+    const es = await this.prisma.eventSport.findUnique({ where: { id } });
+    if (!es) throw new NotFoundException('Vínculo não encontrado');
+
+    return this.prisma.eventSport.update({ where: { id }, data: dto, include: { sport: true } });
+  }
+
   async remove(eventId: string, sportId: string) {
     this.checkDb();
     const eventSport = await this.prisma.eventSport.findUnique({
