@@ -37,11 +37,11 @@ async function main() {
   });
 
   const saoPaulo = await prisma.city.create({
-    data: { nome: 'São Paulo', estado: 'SP' },
+    data: { nome: 'São Paulo', estado: 'São Paulo', siglaEstado: 'SP' },
   });
 
   const rio = await prisma.city.create({
-    data: { nome: 'Rio de Janeiro', estado: 'RJ' },
+    data: { nome: 'Rio de Janeiro', estado: 'Rio de Janeiro', siglaEstado: 'RJ' },
   });
 
   const spMasc = await prisma.team.create({

@@ -85,13 +85,17 @@ model EventSport {
 }
 
 model City {
-  id        String   @id @default(uuid()) @db.Uuid
-  nome      String
-  estado    String
-  brasaoUrl String?
-  createdAt DateTime @default(now())
+  id          String   @id @default(uuid()) @db.Uuid
+  nome        String
+  estado      String
+  siglaEstado String
+  brasaoUrl   String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   teams Team[]
+
+  @@unique([nome, siglaEstado])
 }
 
 model Team {

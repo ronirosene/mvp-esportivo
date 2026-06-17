@@ -37,6 +37,13 @@ function Sidebar() {
         >
           Eventos
         </a>
+        <a
+          href="/cities"
+          onClick={(e) => { e.preventDefault(); router.push('/cities'); }}
+          className="block rounded-md px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-muted"
+        >
+          Cidades
+        </a>
       </nav>
       {user && (
         <div className="border-t pt-4">
