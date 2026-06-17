@@ -1,12 +1,82 @@
 'use client';
 
 import { Inter } from 'next/font/google';
-import { useRouter, usePathname } from 'next/navigation';
+import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { useEffect } from 'react';
 import { AuthProvider, useAuth } from '@/contexts/auth-context';
 import './globals.css';
 
 const inter = Inter({ subsets: ['latin'] });
+
+const PUBLIC_ROUTES = ['/', '/eventos'];
+
+function isPublicRoute(pathname: string): boolean {
+  if (pathname === '/') return true;
+  if (pathname.startsWith('/eventos')) return true;
+  if (pathname.startsWith('/login')) return true;
+  return false;
+}
+
+function PublicHeader() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const { user } = useAuth();
+
+  return (
+    <header className="sticky top-0 z-40 border-b bg-background">
+      <div className="mx-auto flex h-14 max-w-5xl items-center justify-between px-4">
+        <div className="flex items-center gap-6">
+          <span
+            className="cursor-pointer text-base font-bold tracking-tight"
+            onClick={() => router.push('/')}
+          >
+            MVP Esportivo
+          </span>
+          <nav className="hidden gap-4 sm:flex">
+            <span
+              className={`cursor-pointer text-sm ${pathname === '/' || pathname.startsWith('/eventos') ? 'font-medium text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+              onClick={() => router.push('/eventos')}
+            >
+              Eventos
+            </span>
+          </nav>
+        </div>
+        <div className="flex items-center gap-3">
+          {user ? (
+            <span
+              className="cursor-pointer text-sm text-muted-foreground hover:text-foreground"
+              onClick={() => router.push('/events')}
+            >
+              Admin
+            </span>
+          ) : (
+            <span
+              className="cursor-pointer text-sm text-muted-foreground hover:text-foreground"
+              onClick={() => router.push('/login')}
+            >
+              Entrar
+            </span>
+          )}
+        </div>
+      </div>
+    </header>
+  );
+}
+
+function PublicLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="flex min-h-screen flex-col">
+      <PublicHeader />
+      <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-6">{children}</main>
+      <footer className="border-t py-6 text-center text-xs text-muted-foreground">
+        <div className="mx-auto max-w-5xl px-4">
+          <p>MVP Esportivo &mdash; Plataforma de gest&atilde;o de eventos esportivos</p>
+          <p className="mt-1">Espa&ccedil;o reservado para patrocinadores</p>
+        </div>
+      </footer>
+    </div>
+  );
+}
 
 function Sidebar() {
   const { user, logout } = useAuth();
@@ -24,16 +94,9 @@ function Sidebar() {
       </div>
       <nav className="flex-1 space-y-2">
         <a
-          href="/"
-          onClick={(e) => { e.preventDefault(); router.push('/'); }}
-          className="block rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground"
-        >
-          Dashboard
-        </a>
-        <a
           href="/events"
           onClick={(e) => { e.preventDefault(); router.push('/events'); }}
-          className="block rounded-md px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-muted"
+          className="block rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground"
         >
           Eventos
         </a>
@@ -43,6 +106,13 @@ function Sidebar() {
           className="block rounded-md px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-muted"
         >
           Cidades
+        </a>
+        <a
+          href="/"
+          onClick={(e) => { e.preventDefault(); router.push('/'); }}
+          className="block rounded-md px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-muted"
+        >
+          Site P&uacute;blico
         </a>
       </nav>
       {user && (
@@ -99,11 +169,18 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const pathname = usePathname();
+  const isPublic = isPublicRoute(pathname);
+
   return (
     <html lang="pt-BR" suppressHydrationWarning>
       <body className={inter.className}>
         <AuthProvider>
-          <AuthGuard>{children}</AuthGuard>
+          {isPublic ? (
+            <PublicLayout>{children}</PublicLayout>
+          ) : (
+            <AuthGuard>{children}</AuthGuard>
+          )}
         </AuthProvider>
       </body>
     </html>
