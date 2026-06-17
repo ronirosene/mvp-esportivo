@@ -54,9 +54,10 @@ model Event {
   createdAt  DateTime    @default(now())
   updatedAt  DateTime    @updatedAt
 
-  teams  Team[]
-  groups Group[]
-  matchs Match[]
+  eventSports EventSport[]
+  teams       Team[]
+  groups      Group[]
+  matchs      Match[]
 }
 
 model Sport {
@@ -65,9 +66,22 @@ model Sport {
   categoria String
   createdAt DateTime @default(now())
 
-  teams  Team[]
-  groups Group[]
-  matchs Match[]
+  eventSports EventSport[]
+  teams       Team[]
+  groups      Group[]
+  matchs      Match[]
+}
+
+model EventSport {
+  id        String   @id @default(uuid()) @db.Uuid
+  eventId   String   @db.Uuid
+  sportId   String   @db.Uuid
+  createdAt DateTime @default(now())
+
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  sport Sport @relation(fields: [sportId], references: [id], onDelete: Restrict)
+
+  @@unique([eventId, sportId])
 }
 
 model City {
