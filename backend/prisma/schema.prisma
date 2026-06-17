@@ -19,9 +19,10 @@ enum EventStatus {
 }
 
 enum MatchStatus {
-  AGENDADA
-  EM_ANDAMENTO
-  FINALIZADA
+  SCHEDULED
+  IN_PROGRESS
+  FINISHED
+  CANCELLED
 }
 
 enum Fase {
@@ -62,7 +63,6 @@ model Event {
 
   eventSports EventSport[]
   teams       Team[]
-  matchs      Match[]
 }
 
 model Sport {
@@ -73,7 +73,6 @@ model Sport {
 
   eventSports EventSport[]
   teams       Team[]
-  matchs      Match[]
 }
 
 model EventSport {
@@ -87,6 +86,7 @@ model EventSport {
 
   eventSportCities EventSportCity[]
   groups           Group[]
+  matches          Match[]
 
   @@unique([eventId, sportId])
 }
@@ -116,6 +116,8 @@ model City {
 
   eventSportCities EventSportCity[]
   teams            Team[]
+  homeMatches      Match[]         @relation("homeMatches")
+  awayMatches      Match[]         @relation("awayMatches")
 
   @@unique([nome, siglaEstado])
 }
@@ -127,12 +129,9 @@ model Team {
   sportId   String   @db.Uuid
   createdAt DateTime @default(now())
 
-  event  Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  city   City  @relation(fields: [cityId], references: [id], onDelete: Restrict)
-  sport  Sport @relation(fields: [sportId], references: [id], onDelete: Restrict)
-
-  matchsAsA Match[] @relation("TeamA")
-  matchsAsB Match[] @relation("TeamB")
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  city  City  @relation(fields: [cityId], references: [id], onDelete: Restrict)
+  sport Sport @relation(fields: [sportId], references: [id], onDelete: Restrict)
 
   @@unique([eventId, cityId, sportId])
 }
@@ -146,6 +145,7 @@ model Group {
   eventSport EventSport @relation(fields: [eventSportId], references: [id], onDelete: Cascade)
 
   groupParticipants GroupParticipant[]
+  matches           Match[]
 
   @@unique([nome, eventSportId])
 }
@@ -161,21 +161,22 @@ model GroupParticipant {
 }
 
 model Match {
-  id        String      @id @default(uuid()) @db.Uuid
-  eventId   String      @db.Uuid
-  sportId   String      @db.Uuid
-  teamAId   String      @db.Uuid
-  teamBId   String      @db.Uuid
-  placarA   Int?
-  placarB   Int?
-  dataHora  DateTime
-  local     String?
-  status    MatchStatus @default(AGENDADA)
-  fase      Fase        @default(GRUPOS)
-  createdAt DateTime    @default(now())
+  id           String       @id @default(uuid()) @db.Uuid
+  groupId      String       @db.Uuid
+  eventSportId String       @db.Uuid
+  homeCityId   String       @db.Uuid
+  awayCityId   String       @db.Uuid
+  matchDate    DateTime?
+  location     String?
+  homeScore    Int?
+  awayScore    Int?
+  status       MatchStatus  @default(SCHEDULED)
+  fase         Fase         @default(GRUPOS)
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
 
-  event Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  sport Sport  @relation(fields: [sportId], references: [id], onDelete: Restrict)
-  teamA Team   @relation("TeamA", fields: [teamAId], references: [id], onDelete: Restrict)
-  teamB Team   @relation("TeamB", fields: [teamBId], references: [id], onDelete: Restrict)
+  group      Group      @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  eventSport EventSport @relation(fields: [eventSportId], references: [id], onDelete: Cascade)
+  homeCity   City       @relation("homeMatches", fields: [homeCityId], references: [id], onDelete: Restrict)
+  awayCity   City       @relation("awayMatches", fields: [awayCityId], references: [id], onDelete: Restrict)
 }

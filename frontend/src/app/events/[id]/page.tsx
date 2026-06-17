@@ -281,6 +281,9 @@ export default function EventDetailPage() {
                                   <li key={gp.id}>{gp.eventSportCity.city.nome}</li>
                                 ))}
                               </ul>
+                              <Button variant="link" size="sm" className="h-auto p-0 text-xs mt-1" onClick={() => router.push(`/events/${event.id}/sports/${es.id}/groups/${g.id}`)}>
+                                Ver Partidas
+                              </Button>
                             </div>
                           ))}
                         </div>
