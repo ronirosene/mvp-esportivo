@@ -1,5 +1,20 @@
 node_modules/
 .env
+.env.local
+.env.*.local
 uploads/
 dist/
 *.log
+.next/
+.fly/
+fly.toml.bak
+
+# Projetos externos (não fazem parte do MVP)
+analise de arquivos/
+atividades.xlsx
+controle-producao/
+imagens de produtos/
+intervals-web/
+produtos-moveis-pelinson/
+Ordem de Produção*
+test_backup.js

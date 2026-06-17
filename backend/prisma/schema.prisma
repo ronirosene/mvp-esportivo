@@ -1,0 +1,131 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  ORGANIZADOR
+}
+
+enum EventStatus {
+  PLANEJAMENTO
+  EM_ANDAMENTO
+  FINALIZADO
+}
+
+enum MatchStatus {
+  AGENDADA
+  EM_ANDAMENTO
+  FINALIZADA
+}
+
+enum Fase {
+  GRUPOS
+  QUARTAS
+  SEMIFINAL
+  FINAL
+  TERCEIRO_LUGAR
+}
+
+model User {
+  id        String   @id @default(uuid()) @db.Uuid
+  nome      String
+  email     String   @unique
+  senha     String
+  role      Role     @default(ORGANIZADOR)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Event {
+  id         String      @id @default(uuid()) @db.Uuid
+  nome       String
+  ano        Int
+  cidadeSede String
+  dataInicio DateTime   @db.Date
+  dataFim    DateTime   @db.Date
+  status     EventStatus @default(PLANEJAMENTO)
+  logoUrl    String?
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+
+  teams  Team[]
+  groups Group[]
+  matchs Match[]
+}
+
+model Sport {
+  id        String   @id @default(uuid()) @db.Uuid
+  nome      String
+  categoria String
+  createdAt DateTime @default(now())
+
+  teams  Team[]
+  groups Group[]
+  matchs Match[]
+}
+
+model City {
+  id        String   @id @default(uuid()) @db.Uuid
+  nome      String
+  estado    String
+  brasaoUrl String?
+  createdAt DateTime @default(now())
+
+  teams Team[]
+}
+
+model Team {
+  id        String   @id @default(uuid()) @db.Uuid
+  eventId   String   @db.Uuid
+  cityId    String   @db.Uuid
+  sportId   String   @db.Uuid
+  createdAt DateTime @default(now())
+
+  event  Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  city   City  @relation(fields: [cityId], references: [id], onDelete: Restrict)
+  sport  Sport @relation(fields: [sportId], references: [id], onDelete: Restrict)
+
+  matchsAsA Match[] @relation("TeamA")
+  matchsAsB Match[] @relation("TeamB")
+
+  @@unique([eventId, cityId, sportId])
+}
+
+model Group {
+  id        String   @id @default(uuid()) @db.Uuid
+  nome      String
+  eventId   String   @db.Uuid
+  sportId   String   @db.Uuid
+  createdAt DateTime @default(now())
+
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  sport Sport @relation(fields: [sportId], references: [id], onDelete: Restrict)
+
+  @@unique([nome, eventId, sportId])
+}
+
+model Match {
+  id        String      @id @default(uuid()) @db.Uuid
+  eventId   String      @db.Uuid
+  sportId   String      @db.Uuid
+  teamAId   String      @db.Uuid
+  teamBId   String      @db.Uuid
+  placarA   Int?
+  placarB   Int?
+  dataHora  DateTime
+  local     String?
+  status    MatchStatus @default(AGENDADA)
+  fase      Fase        @default(GRUPOS)
+  createdAt DateTime    @default(now())
+
+  event Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  sport Sport  @relation(fields: [sportId], references: [id], onDelete: Restrict)
+  teamA Team   @relation("TeamA", fields: [teamAId], references: [id], onDelete: Restrict)
+  teamB Team   @relation("TeamB", fields: [teamBId], references: [id], onDelete: Restrict)
+}
