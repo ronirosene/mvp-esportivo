@@ -23,6 +23,7 @@ enum MatchStatus {
   IN_PROGRESS
   FINISHED
   CANCELLED
+  AWAITING_PREVIOUS_MATCH
 }
 
 enum Fase {

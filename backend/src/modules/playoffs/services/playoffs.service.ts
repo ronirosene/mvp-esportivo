@@ -8,7 +8,7 @@ export class PlayoffsService {
 
   private checkDb() {
     if (!this.prisma.isConnected) {
-      throw new ServiceUnavailableException('Banco de dados indisponível');
+      throw new ServiceUnavailableException('Banco de dados indispon\u00edvel');
     }
   }
 
@@ -17,7 +17,7 @@ export class PlayoffsService {
     return this.prisma.match.findMany({
       where: { eventSportId, fase: { not: 'GRUPOS' } },
       include: { homeCity: true, awayCity: true },
-      orderBy: [{ fase: 'asc' }, { createdAt: 'asc' }],
+      orderBy: [{ round: 'asc' as const }, { displayOrder: 'asc' as const }, { createdAt: 'asc' as const }],
     });
   }
 
@@ -25,7 +25,7 @@ export class PlayoffsService {
     let fmt = await this.prisma.competitionFormat.findUnique({ where: { eventSportId } });
     if (!fmt) {
       const es = await this.prisma.eventSport.findUnique({ where: { id: eventSportId } });
-      if (!es) throw new NotFoundException('Modalidade não encontrada');
+      if (!es) throw new NotFoundException('Modalidade n\u00e3o encontrada');
       fmt = await this.prisma.competitionFormat.create({
         data: {
           eventSportId,
@@ -47,25 +47,27 @@ export class PlayoffsService {
       include: {
         standings: {
           include: { city: true },
-          orderBy: { position: 'asc' },
-          take: fmt.qualifiedPerGroup,
+          orderBy: { position: 'asc' as const },
         },
       },
-      orderBy: { nome: 'asc' },
+      orderBy: { nome: 'asc' as const },
     });
 
     if (groups.length < 2) {
-      throw new BadRequestException('Mínimo de 2 grupos para gerar mata-mata.');
+      throw new BadRequestException('M\u00ednimo de 2 grupos para gerar mata-mata.');
     }
 
-    const qualified: { cityId: string; groupIndex: number; position: number }[] = [];
+    const firsts: { cityId: string }[] = [];
+    const seconds: { cityId: string }[] = [];
+
     for (const group of groups) {
       const top = group.standings.slice(0, fmt.qualifiedPerGroup);
       if (top.length < fmt.qualifiedPerGroup) {
-        throw new BadRequestException(`Grupo ${group.nome} não possui classificação completa.`);
+        throw new BadRequestException(`Grupo ${group.nome} n\u00e3o possui classifica\u00e7\u00e3o completa.`);
       }
-      for (const s of top) {
-        qualified.push({ cityId: s.cityId, groupIndex: groups.indexOf(group), position: s.position });
+      firsts.push({ cityId: top[0].cityId });
+      if (top.length > 1) {
+        seconds.push({ cityId: top[1].cityId });
       }
     }
 
@@ -74,21 +76,20 @@ export class PlayoffsService {
     });
 
     const groupCount = groups.length;
-    const firsts = qualified.filter((q) => q.position === 1);
-    const seconds = qualified.filter((q) => q.position === 2);
-
-    const firstPhase = qualified.length <= 4 ? 'SEMIFINAL' as Fase : 'QUARTAS' as Fase;
+    const firstPhase: Fase = groupCount > 2 ? 'QUARTAS' : 'SEMIFINAL';
 
     for (let i = 0; i < groupCount; i++) {
-      const homeTeam = firsts[i];
-      const awayTeam = seconds[groupCount - 1 - i];
+      const home = firsts[i];
+      const away = seconds[groupCount - 1 - i];
       await this.prisma.match.create({
         data: {
           eventSportId,
-          homeCityId: homeTeam.cityId,
-          awayCityId: awayTeam.cityId,
+          homeCityId: home.cityId,
+          awayCityId: away.cityId,
           status: 'SCHEDULED',
           fase: firstPhase,
+          round: 1,
+          displayOrder: i + 1,
         },
       });
     }
@@ -100,18 +101,67 @@ export class PlayoffsService {
     this.checkDb();
     const fmt = await this.getFormat(eventSportId);
 
-    const semis = await this.prisma.match.findMany({
-      where: { eventSportId, fase: 'SEMIFINAL' },
+    const matches = await this.prisma.match.findMany({
+      where: { eventSportId, fase: { not: 'GRUPOS' } },
+      orderBy: [{ round: 'asc' as const }, { displayOrder: 'asc' as const }],
     });
 
-    if (semis.length > 0 && semis.every((m) => m.status === 'FINISHED' && m.homeScore !== null && m.awayScore !== null)) {
+    if (matches.length === 0) {
+      throw new BadRequestException('Nenhum confronto de mata-mata encontrado.');
+    }
+
+    const hasQuartas = matches.some((m) => m.fase === 'QUARTAS');
+    const hasSemi = matches.some((m) => m.fase === 'SEMIFINAL');
+    const hasFinal = matches.some((m) => m.fase === 'FINAL');
+
+    if (hasQuartas) {
+      const quartasMatches = matches.filter((m) => m.fase === 'QUARTAS');
+      if (quartasMatches.length === 0) return this.findByEventSport(eventSportId);
+
+      const allDone = quartasMatches.every((m) => m.status === 'FINISHED');
+      if (!allDone) {
+        throw new BadRequestException('Nem todas as quartas de final foram finalizadas.');
+      }
+
+      await this.prisma.match.deleteMany({
+        where: { eventSportId, fase: 'SEMIFINAL' },
+      });
+
+      const semiCount = quartasMatches.length / 2;
+      for (let i = 0; i < semiCount; i++) {
+        const m1 = quartasMatches[i * 2];
+        const m2 = quartasMatches[i * 2 + 1];
+        const w1 = m1.homeScore! > m1.awayScore! ? m1.homeCityId : m1.awayCityId;
+        const w2 = m2.homeScore! > m2.awayScore! ? m2.homeCityId : m2.awayCityId;
+
+        await this.prisma.match.create({
+          data: {
+            eventSportId,
+            homeCityId: w1,
+            awayCityId: w2,
+            status: 'SCHEDULED',
+            fase: 'SEMIFINAL',
+            round: 2,
+            displayOrder: i + 1,
+          },
+        });
+      }
+    } else if (hasSemi && !hasFinal) {
+      const semiMatches = matches.filter((m) => m.fase === 'SEMIFINAL');
+      if (semiMatches.length === 0) return this.findByEventSport(eventSportId);
+
+      const allDone = semiMatches.every((m) => m.status === 'FINISHED');
+      if (!allDone) {
+        throw new BadRequestException('Nem todas as semifinais foram finalizadas.');
+      }
+
       await this.prisma.match.deleteMany({
         where: { eventSportId, fase: { in: ['FINAL', 'TERCEIRO_LUGAR'] } },
       });
 
       const winners: string[] = [];
       const losers: string[] = [];
-      for (const m of semis) {
+      for (const m of semiMatches) {
         if (m.homeScore! > m.awayScore!) {
           winners.push(m.homeCityId);
           losers.push(m.awayCityId);
@@ -122,16 +172,32 @@ export class PlayoffsService {
       }
 
       await this.prisma.match.create({
-        data: { eventSportId, homeCityId: winners[0], awayCityId: winners[1], status: 'SCHEDULED', fase: 'FINAL' },
+        data: {
+          eventSportId,
+          homeCityId: winners[0],
+          awayCityId: winners[1],
+          status: 'SCHEDULED',
+          fase: 'FINAL',
+          round: 3,
+          displayOrder: 1,
+        },
       });
 
       if (fmt.thirdPlaceMatch) {
         await this.prisma.match.create({
-          data: { eventSportId, homeCityId: losers[0], awayCityId: losers[1], status: 'SCHEDULED', fase: 'TERCEIRO_LUGAR' },
+          data: {
+            eventSportId,
+            homeCityId: losers[0],
+            awayCityId: losers[1],
+            status: 'SCHEDULED',
+            fase: 'TERCEIRO_LUGAR',
+            round: 3,
+            displayOrder: 2,
+          },
         });
       }
-
-      return this.findByEventSport(eventSportId);
+    } else {
+      throw new BadRequestException('N\u00e3o h\u00e1 fase para avan\u00e7ar.');
     }
 
     return this.findByEventSport(eventSportId);

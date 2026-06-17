@@ -145,7 +145,7 @@ const [playoffs, setPlayoffs] = useState<Record<string, MatchData[]>>({});
     if (!groupCountStr) return;
     const groupCount = parseInt(groupCountStr, 10);
     if (isNaN(groupCount) || groupCount < 1) {
-      setError('Informe um n??mero v??lido de grupos.');
+      setError('Informe um número válido de grupos.');
       return;
     }
     try {
@@ -157,12 +157,12 @@ const [playoffs, setPlayoffs] = useState<Record<string, MatchData[]>>({});
   }
 
   async function handleRegenerateGroups(eventSportId: string) {
-    if (!window.confirm('Tem certeza que deseja regerar os grupos? Os grupos atuais ser??o exclu??dos.')) return;
+    if (!window.confirm('Tem certeza que deseja regerar os grupos? Os grupos atuais serão excluídos.')) return;
     const groupCountStr = prompt('Quantidade de grupos?');
     if (!groupCountStr) return;
     const groupCount = parseInt(groupCountStr, 10);
     if (isNaN(groupCount) || groupCount < 1) {
-      setError('Informe um n??mero v??lido de grupos.');
+      setError('Informe um número válido de grupos.');
       return;
     }
     try {
@@ -188,7 +188,7 @@ const [playoffs, setPlayoffs] = useState<Record<string, MatchData[]>>({});
       await playoffsApi.generate(eventSportId);
       fetchPlayoffs(sports);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erro ao gerar eliminat??rias');
+      setError(err instanceof Error ? err.message : 'Erro ao gerar eliminatórias');
     }
   }
 
@@ -197,12 +197,32 @@ const [playoffs, setPlayoffs] = useState<Record<string, MatchData[]>>({});
       await playoffsApi.advance(eventSportId);
       fetchPlayoffs(sports);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erro ao avan??ar fase');
+      setError(err instanceof Error ? err.message : 'Erro ao avançar fase');
+    }
+  }
+
+  async function handleUpdatePlayoffScore(matchId: string, field: 'homeScore' | 'awayScore', value: string) {
+    try {
+      const { matchesApi } = await import('@/services/matches');
+      await matchesApi.update(matchId, { [field]: value === '' ? null : parseInt(value, 10) });
+      fetchPlayoffs(sports);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erro ao atualizar placar');
+    }
+  }
+
+  async function handleFinishPlayoffMatch(matchId: string, homeScore: number, awayScore: number) {
+    try {
+      const { matchesApi } = await import('@/services/matches');
+      await matchesApi.update(matchId, { homeScore, awayScore, status: 'FINISHED' });
+      fetchPlayoffs(sports);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erro ao finalizar partida');
     }
   }
 
   async function handleUpdateConfig(eventSportId: string) {
-    const countStr = prompt('Classificados por grupo? (padr??o: 2)');
+    const countStr = prompt('Classificados por grupo? (padrão: 2)');
     if (!countStr) return;
     const count = parseInt(countStr, 10);
     if (isNaN(count) || count < 1) return;
@@ -214,7 +234,7 @@ const [playoffs, setPlayoffs] = useState<Record<string, MatchData[]>>({});
       });
       fetchPlayoffs(sports);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erro ao salvar configura????o');
+      setError(err instanceof Error ? err.message : 'Erro ao salvar configuração');
     }
   }
 
@@ -224,13 +244,13 @@ const [playoffs, setPlayoffs] = useState<Record<string, MatchData[]>>({});
       setFormatConfig((prev) => ({ ...prev, [eventSportId]: updated }));
       setConfiguringId(null);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erro ao salvar configura????o');
+      setError(err instanceof Error ? err.message : 'Erro ao salvar configuração');
     }
   }
 
   if (loading) return <p className="text-muted-foreground">Carregando...</p>;
   if (error) return <p className="text-destructive">{error}</p>;
-  if (!event) return <p className="text-muted-foreground">Evento n??o encontrado.</p>;
+  if (!event) return <p className="text-muted-foreground">Evento não encontrado.</p>;
 
   return (
     <div className="space-y-6">
@@ -245,7 +265,7 @@ const [playoffs, setPlayoffs] = useState<Record<string, MatchData[]>>({});
       <div className="grid gap-4 md:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Informa????es</CardTitle>
+            <CardTitle className="text-lg">Informações</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3 text-sm">
             <div className="flex justify-between">
@@ -269,15 +289,17 @@ const [playoffs, setPlayoffs] = useState<Record<string, MatchData[]>>({});
           </CardHeader>
           <CardContent className="space-y-3 text-sm">
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Data In??cio</span>
+              <span className="text-muted-foreground">Data Início</span>
               <span>{new Date(event.dataInicio).toLocaleDateString('pt-BR')}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">Data Fim</span>
               <span>{new Date(event.dataFim).toLocaleDateString('pt-BR')}</span>
             </div>
-        </CardContent>
+          </CardContent>
         </Card>
+      </div>
+
 
         {configuringId && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => setConfiguringId(null)}>
@@ -336,8 +358,6 @@ const [playoffs, setPlayoffs] = useState<Record<string, MatchData[]>>({});
             </Card>
           </div>
         )}
-    </div>
-
       <Card>
         <CardHeader>
           <CardTitle className="text-lg">Modalidades do Evento</CardTitle>
@@ -386,13 +406,6 @@ const [playoffs, setPlayoffs] = useState<Record<string, MatchData[]>>({});
                       </div>
                     )}
                     <div className="border-t px-3 py-2">
-                      {token && (
-                        <div className="flex gap-2 mb-2">
-                          <Button variant="outline" size="sm" onClick={() => handleUpdateConfig(es.id)}>
-                            Config. Eliminat??rias
-                          </Button>
-                        </div>
-                      )}
                       <h4 className="text-xs font-semibold uppercase text-muted-foreground mb-2">Grupos</h4>
                       {token && (
                         <div className="flex gap-2 mb-2">
@@ -438,15 +451,15 @@ const [playoffs, setPlayoffs] = useState<Record<string, MatchData[]>>({});
                       )}
                     </div>
                     <div className="border-t px-3 py-2">
-                      <h4 className="text-xs font-semibold uppercase text-muted-foreground mb-2">Eliminat??rias</h4>
+                      <h4 className="text-xs font-semibold uppercase text-muted-foreground mb-2">Eliminatórias</h4>
                       {token && (
                         <div className="flex gap-2 mb-2">
                           <Button variant="outline" size="sm" onClick={() => handleGeneratePlayoffs(es.id)}>
-                            Gerar Eliminat??rias
+                            Gerar Eliminatórias
                           </Button>
                           {(playoffs[es.id]?.length ?? 0) > 0 && (
                             <Button variant="outline" size="sm" onClick={() => handleAdvancePlayoffs(es.id)}>
-                              Avan??ar Fase
+                              Avançar Fase
                             </Button>
                           )}
                         </div>
@@ -454,15 +467,61 @@ const [playoffs, setPlayoffs] = useState<Record<string, MatchData[]>>({});
                       {!playoffs[es.id] || playoffs[es.id].length === 0 ? (
                         <p className="text-xs text-muted-foreground">Nenhum confronto gerado.</p>
                       ) : (
-                        <div className="space-y-2">
-                          {playoffs[es.id].map((m) => (
-                            <div key={m.id} className="flex items-center justify-between rounded-md border bg-muted/20 px-3 py-1.5 text-sm">
-                              <span>{m.homeCity.nome} ({m.homeCity.siglaEstado})</span>
-                              <span className="text-xs font-semibold uppercase text-muted-foreground">vs</span>
-                              <span>{m.awayCity.nome} ({m.awayCity.siglaEstado})</span>
-                              <span className="text-xs text-muted-foreground capitalize">{m.status === 'FINISHED' ? `${m.homeScore ?? '?'} x ${m.awayScore ?? '?'}` : m.fase.toLowerCase()}</span>
-                            </div>
-                          ))}
+                        <div className="space-y-3">
+                          {(['QUARTAS', 'SEMIFINAL', 'TERCEIRO_LUGAR', 'FINAL']).map((fase) => {
+                            const faseMatches = playoffs[es.id].filter((m) => m.fase === fase);
+                            if (faseMatches.length === 0) return null;
+                            return (
+                              <div key={fase}>
+                                <p className="text-xs font-semibold text-muted-foreground mb-1 uppercase tracking-wide">{fase.replace(/_/g, ' ')}</p>
+                                <div className="space-y-1.5">
+                                  {faseMatches.map((m) => (
+                                    <div key={m.id} className="flex flex-wrap items-center justify-between gap-2 rounded-md border bg-muted/20 px-3 py-2 text-sm">
+                                      <div className="flex items-center gap-2 min-w-0">
+                                        <span className="font-medium truncate">{m.homeCity.nome}</span>
+                                        <span className="text-muted-foreground shrink-0">({m.homeCity.siglaEstado})</span>
+                                      </div>
+                                      <div className="flex items-center gap-1 shrink-0">
+                                        {token && m.status !== 'FINISHED' ? (
+                                          <>
+                                            <input
+                                              type="number"
+                                              min="0"
+                                              className="w-10 rounded border px-1 py-0.5 text-center text-xs"
+                                              value={m.homeScore ?? ''}
+                                              onChange={(e) => handleUpdatePlayoffScore(m.id, 'homeScore', e.target.value)}
+                                            />
+                                            <span className="text-muted-foreground">x</span>
+                                            <input
+                                              type="number"
+                                              min="0"
+                                              className="w-10 rounded border px-1 py-0.5 text-center text-xs"
+                                              value={m.awayScore ?? ''}
+                                              onChange={(e) => handleUpdatePlayoffScore(m.id, 'awayScore', e.target.value)}
+                                            />
+                                            {m.homeScore !== null && m.awayScore !== null && (
+                                              <Button variant="outline" size="sm" className="h-6 text-xs ml-1" onClick={() => handleFinishPlayoffMatch(m.id, m.homeScore!, m.awayScore!)}>
+                                                Finalizar
+                                              </Button>
+                                            )}
+                                          </>
+                                        ) : (
+                                          <span className="font-semibold tabular-nums">
+                                            {m.homeScore ?? '?'} x {m.awayScore ?? '?'}
+                                          </span>
+                                        )}
+                                      </div>
+                                      <div className="flex items-center gap-2 min-w-0">
+                                        <span className="font-medium truncate">{m.awayCity.nome}</span>
+                                        <span className="text-muted-foreground shrink-0">({m.awayCity.siglaEstado})</span>
+                                      </div>
+                                      <span className="text-[10px] uppercase text-muted-foreground">{m.status === 'FINISHED' ? 'Finalizado' : m.status === 'IN_PROGRESS' ? 'Em Andamento' : m.status === 'AWAITING_PREVIOUS_MATCH' ? 'Aguardando' : 'Agendado'}</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            );
+                          })}
                         </div>
                       )}
                     </div>
