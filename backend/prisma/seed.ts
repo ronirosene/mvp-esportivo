@@ -6,6 +6,15 @@ const prisma = new PrismaClient();
 async function main() {
   const senhaHash = await bcrypt.hash('123456', 10);
 
+  // Clean existing data in reverse dependency order
+  await prisma.match.deleteMany();
+  await prisma.group.deleteMany();
+  await prisma.team.deleteMany();
+  await prisma.eventSport.deleteMany();
+  await prisma.event.deleteMany();
+  await prisma.sport.deleteMany();
+  await prisma.city.deleteMany();
+
   const user = await prisma.user.upsert({
     where: { email: 'admin@admin.com' },
     update: {},
