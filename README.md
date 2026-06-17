@@ -123,6 +123,33 @@ GET https://mvp-backend-little-woodland-6494.fly.dev/api/v1/health
 - Edição inline de placares (homeScore x awayScore)
 - Status SCHEDULED / IN_PROGRESS / FINISHED / CANCELLED
 
+### MVP 10 — Classificação
+- GroupStanding com critérios: pontos → saldo → gols pró
+- Tabela na página do grupo
+
+### MVP 11 — CompetitionFormat + Fase Eliminatória
+- Configuração de formato por modalidade (GROUP_STAGE, ROUND_ROBIN, KNOCKOUT, MANUAL)
+- Geração de quartas/semifinal/final + terceiro lugar
+
+### MVP 12 — Mata-Mata Automático
+- Avanço automático QUARTAS → SEMIFINAL → FINAL
+- Partidas com status AWAITING_PREVIOUS_MATCH
+
+### MVP 13 — Portal Público
+- Layout condicional (público vs admin)
+- Landing page, eventos, modalidades públicas
+
+### MVP 14 — Chaveamento Visual
+- BracketView com SVG connectors
+- Modal com detalhes da partida
+- /mata-mata por modalidade
+
+### MVP 14.1 — Agenda Oficial
+- /agenda com abas Hoje/Próximos/Resultados
+- ScheduleCard com status badges (AO VIVO, FINALIZADO, EM BREVE)
+- Filtros por cidade, modalidade, evento, status, busca textual
+- Seção Jogos de Hoje na home
+
 ---
 
 ## Rotas da API
@@ -185,6 +212,22 @@ GET https://mvp-backend-little-woodland-6494.fly.dev/api/v1/health
 | DELETE | `/api/v1/groups/:id/matches` | Excluir partidas |
 | PUT | `/api/v1/matches/:id` | Atualizar partida |
 
+### Playoffs
+| Método | Rota | Descrição |
+|--------|------|-----------|
+| GET | `/api/v1/event-sports/:id/playoffs` | Listar confrontos |
+| GET | `/api/v1/event-sports/:id/playoffs/bracket` | Bracket estruturado |
+| POST | `/api/v1/event-sports/:id/playoffs/generate` | Gerar fase |
+| POST | `/api/v1/event-sports/:id/playoffs/advance` | Avançar fase |
+
+### Public Schedule
+| Método | Rota | Descrição |
+|--------|------|-----------|
+| GET | `/api/v1/public/schedule/today` | Jogos de hoje |
+| GET | `/api/v1/public/schedule/upcoming` | Próximos 7 dias |
+| GET | `/api/v1/public/schedule/results` | Últimos resultados |
+| GET | `/api/v1/public/schedule` | Com filtros |
+
 ---
 
 ## Checklist Produção
@@ -193,7 +236,26 @@ GET https://mvp-backend-little-woodland-6494.fly.dev/api/v1/health
 - [x] 2. Fly.io configurado
 - [x] 3. Vercel configurado (`mvp-esportivo.vercel.app`)
 - [x] 4. Secrets Fly.io: `DATABASE_URL`, `JWT_SECRET`, `FRONTEND_URL`
-- [x] 5. Migrations aplicadas (0001 a 0006)
+- [x] 5. Migrations aplicadas (0001 a 0012)
 - [x] 6. Seed executado
 - [x] 7. Healthcheck: `database: "connected"`
 - [x] 8. CI/CD GitHub Actions configurado
+
+## Páginas Públicas
+
+| Rota | Descrição |
+|------|-----------|
+| `/` | Landing page com eventos + Jogos de Hoje |
+| `/eventos` | Lista de todos os eventos |
+| `/eventos/[id]` | Detalhe do evento |
+| `/eventos/[id]/modalidades/[id]` | Grupos, classificação, jogos, mata-mata |
+| `/eventos/[id]/modalidades/[id]/mata-mata` | Chaveamento visual (bracket) |
+| `/agenda` | Agenda oficial (Hoje/Próximos/Resultados) |
+
+## Páginas Admin
+
+| Rota | Descrição |
+|------|-----------|
+| `/login` | Login |
+| `/events` | CRUD de eventos |
+| `/cities` | CRUD de cidades |

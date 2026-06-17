@@ -34,24 +34,28 @@ Monorepo (backend/ + frontend/) — sistema de gestão de eventos esportivos com
 - `.env` is gitignored. Never commit it.
 
 ## Architecture
-### Schema (10 models, 5 enums)
+### Schema (12+ models, 8 enums)
 - **User** — ADMIN/ORGANIZADOR, JWT auth
 - **Event** — nome, ano, cidadeSede, dataInicio/Fim, status
 - **Sport** — nome, categoria
-- **EventSport** — junction Event<->Sport with unique constraint
+- **EventSport** — junction Event<->Sport with unique constraint, drawMode (AUTOMATICO/MANUAL)
 - **EventSportCity** — city enrollment in a sport modality with InscricaoStatus
 - **City** — nome, estado, siglaEstado (unique [nome, siglaEstado])
-- **Team** — legacy (eventId + cityId + sportId)
-- **Group** — linked to EventSport, auto-generated via round-robin
+- **CompetitionFormat** — 1:1 with EventSport, FormatType (GROUP_STAGE/ROUND_ROBIN/KNOCKOUT/MANUAL)
+- **Group** — linked to EventSport, auto via round-robin or manual
 - **GroupParticipant** — links Group to EventSportCity (unique per city)
-- **Match** — linked to Group + EventSport + City (home/away), scores, status SCHEDULED/IN_PROGRESS/FINISHED/CANCELLED
+- **GroupStanding** — classification per group
+- **Match** — linked to Group + EventSport + City (home/away), scores, status SCHEDULED/IN_PROGRESS/FINISHED/CANCELLED/AWAITING_PREVIOUS_MATCH
+- **Team** — legacy
 
 ### Enums
 - `Role`: ADMIN, ORGANIZADOR
 - `EventStatus`: PLANEJAMENTO, EM_ANDAMENTO, FINALIZADO
 - `InscricaoStatus`: INSCRITO, CONFIRMADO, DESISTENTE
-- `MatchStatus`: SCHEDULED, IN_PROGRESS, FINISHED, CANCELLED
+- `MatchStatus`: SCHEDULED, IN_PROGRESS, FINISHED, CANCELLED, AWAITING_PREVIOUS_MATCH
 - `Fase`: GRUPOS, QUARTAS, SEMIFINAL, FINAL, TERCEIRO_LUGAR
+- `DrawMode`: AUTOMATICO, MANUAL
+- `FormatType`: GROUP_STAGE, ROUND_ROBIN, KNOCKOUT, MANUAL
 
 ## MVP Progress
 ### Done
@@ -59,11 +63,19 @@ Monorepo (backend/ + frontend/) — sistema de gestão de eventos esportivos com
 - **MVP 2**: Dockerfiles (node:20-slim + OpenSSL), Fly.io deploy, Neon DB, healthcheck
 - **MVP 3**: CI/CD GitHub Actions (backend.yml, frontend.yml)
 - **MVP 4**: Frontend completo (Tailwind + Shadcn), login, eventos CRUD UI
-- **MVP 5** — EventSports (modalidades por evento): migration 0002, módulo event-sports, frontend add/remove
-- **MVP 6** — Cities CRUD: migration 0003, módulo cities, frontend /cities (list/new/edit)
-- **MVP 7** — EventSportCity (inscrição de cidades): migration 0004, módulo event-sport-cities, participantes inline no evento
-- **MVP 8** — Grupos: migration 0005 (Group redesign + GroupParticipant), módulo groups, shuffle+round-robin, frontend gerar/regerar
-- **MVP 9** — Partidas: migration 0006 (Match redesign + MatchStatus enum), módulo matches, round-robin match generation, frontend com edição inline de placares
+- **MVP 5** — EventSports (modalidades por evento): migration 0002, mod event-sports, frontend add/remove
+- **MVP 6** — Cities CRUD: migration 0003, mod cities, frontend /cities (list/new/edit)
+- **MVP 7** — EventSportCity (inscricao de cidades): migration 0004, frontend inline no evento
+- **MVP 8** — Grupos: migration 0005, shuffle+round-robin, gerar/regerar
+- **MVP 9** — Partidas: migration 0006, round-robin match generation, edicao inline de placares
+- **MVP 8.5** — Modo Manual: migration 0010 (DrawMode), grupos manuais, participantes manuais, partidas manuais
+- **MVP 10** — Classificacao: GroupStanding, criterios pontos/saldo/gols, tabela na pagina do grupo
+- **MVP 11** — CompetitionFormat: migration 0011 (FormatType), mod competition-formats, frontend modal config
+- **MVP 11** — Fase Eliminatoria: migrations 0008/0009, playoffs service (generate/advance), quartas/semifinal/final
+- **MVP 12** — Classificados e Mata-Mata Automatico: migration 0012, playoffs reescrito, bracket visual com status
+- **MVP 13** — Portal Publico: layout condicional, landing page, eventos/evento/modalidade publicas, SEO
+- **MVP 14** — Chaveamento Visual (Bracket): GET /event-sports/:id/playoffs/bracket, BracketView component com SVG lines, modal match details, /mata-mata page
+- **MVP 14.1** — Agenda Oficial: backend module public-schedule (today/upcoming/results/filter), /agenda page with tabs, ScheduleCard/ScheduleFilters, Jogos de Hoje na home
 
 ### In Progress
 - (none)
@@ -79,32 +91,47 @@ Monorepo (backend/ + frontend/) — sistema de gestão de eventos esportivos com
 - Match model uses City references directly (homeCityId/awayCityId) instead of Team references
 - Group model references EventSport directly (not Event + Sport separately)
 - All UUIDs generated in application layer (not DB)
+- Portal publico usa o mesmo api helper (silent token forwarding), todos GETs sao publicos
+- Rotas publicas em portugues (/eventos/*) para nao conflitar com admin em ingles (/events/*)
+- Layout condicional via usePathname() no RootLayout sem route groups
 
 ## Relevant Backend Files
-- `backend/prisma/schema.prisma` — Full schema (10 models, 5 enums)
+- `backend/prisma/schema.prisma` — Full schema (12 models, 8 enums)
 - `backend/prisma/seed.ts` — Idempotent seed with admin + sample data
 - `backend/src/modules/events/` — Event CRUD
-- `backend/src/modules/event-sports/` — Sport-event linking
+- `backend/src/modules/event-sports/` — Sport-event linking + SportsController (/sports)
 - `backend/src/modules/cities/` — City CRUD
 - `backend/src/modules/event-sport-cities/` — City enrollment in sports
-- `backend/src/modules/groups/` — Group generation
+- `backend/src/modules/groups/` — Group generation (auto + manual)
 - `backend/src/modules/matches/` — Match generation + score editing
+- `backend/src/modules/standings/` — GroupStanding CRUD
+- `backend/src/modules/playoffs/` — Playoffs generation + advancement + bracket endpoint
+- `backend/src/modules/competition-formats/` — Format config (GROUP_STAGE, etc.)
+- `backend/src/modules/public-schedule/` — Public schedule (today/upcoming/results/filter)
 - `backend/src/modules/auth/` — JWT auth
 - `backend/Dockerfile` — Multi-stage with node:20-slim
 - `backend/fly.toml` — Fly.io config (app mvp-backend-little-woodland-6494, region gru)
 
 ## Relevant Frontend Files
-- `frontend/src/app/events/[id]/page.tsx` — Event detail with sports/participants/groups
-- `frontend/src/app/events/[id]/sports/[eventSportId]/cities/new/page.tsx` — Add city to sport
-- `frontend/src/app/events/[id]/sports/[eventSportId]/groups/[groupId]/page.tsx` — Group matches page
-- `frontend/src/app/cities/` — Cities CRUD pages
-- `frontend/src/services/` — API services (api.ts, events.ts, event-sports.ts, cities.ts, event-sport-cities.ts, event-sport-groups.ts, matches.ts)
+- `frontend/src/app/layout.tsx` — Root layout with conditional public/admin rendering
+- `frontend/src/app/page.tsx` — Landing page publica com eventos + Jogos de Hoje
+- `frontend/src/app/eventos/` — Rotas publicas (/eventos, /eventos/[id], /eventos/[id]/modalidades/[id], /mata-mata)
+- `frontend/src/app/agenda/` — Pagina publica de agenda com abas e filtros
+- `frontend/src/app/events/[id]/page.tsx` — Admin: event detail with sports/participants/groups/playoffs
+- `frontend/src/app/cities/` — Admin: Cities CRUD pages
+- `frontend/src/components/bracket-view.tsx` — Visual bracket component with SVG connectors
+- `frontend/src/components/schedule-card.tsx` — Match card for schedule
+- `frontend/src/components/schedule-filters.tsx` — Filters for schedule
+- `frontend/src/services/` — API services
 
 ## URLs
-- Backend: `https://mvp-backend-little-woodland-6494.fly.dev`
-- Frontend: `https://mvp-esportivo.vercel.app`
-- Health: `https://mvp-backend-little-woodland-6494.fly.dev/api/v1/health`
-- Neon: `ep-tiny-moon-acrrprlb.sa-east-1.aws.neon.tech`
+- **Frontend (publico)**: `https://mvp-esportivo.vercel.app`
+- **Backend (API)**: `https://mvp-backend-little-woodland-6494.fly.dev`
+- **Health**: `https://mvp-backend-little-woodland-6494.fly.dev/api/v1/health`
+- **Admin**: `https://mvp-esportivo.vercel.app/login`
+- **Agenda Publica**: `https://mvp-esportivo.vercel.app/agenda`
+- **GitHub**: `github.com/ronirosene/mvp-esportivo` (branch `master`)
+- **Neon**: `ep-tiny-moon-acrrprlb.sa-east-1.aws.neon.tech`
 
 ## Known Issues / Notes
 - Port 3001 can stay occupied locally; use `Get-Process -Name node | Stop-Process -Force`
@@ -112,3 +139,5 @@ Monorepo (backend/ + frontend/) — sistema de gestão de eventos esportivos com
 - Vercel auto-deploys on push to master (GitHub integration)
 - Shell tool struggles with inline PowerShell scripts — prefer writing .cjs files for complex Node.js scripts
 - `cmd /c` needed for chaining commands (PowerShell `&&` not available in PS 5.1)
+- Encodings corrompidos em arquivos editados pelo edit tool (acentos substituidos por ?); usar Node.js scripts
+- Arquivo build_complete_page.js em C:\\TEMP\\opencode\\ para reconstruir page.tsx sem corromper encoding
