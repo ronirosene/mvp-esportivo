@@ -1,10 +1,10 @@
 # MVP Esportivo
 
-Sistema de gestão de eventos esportivos.
+Sistema de gestão de eventos esportivos — autenticação JWT, CRUD de eventos/modalidades/cidades/participantes, geração automática de grupos e partidas.
 
 ## Stack
 
-- **Frontend:** Next.js 14, Tailwind CSS, Shadcn/UI
+- **Frontend:** Next.js 14, Tailwind CSS 3, Shadcn/UI
 - **Backend:** NestJS 10, Prisma 5, PostgreSQL 16
 - **Auth:** JWT (Passport), bcrypt
 
@@ -12,7 +12,7 @@ Sistema de gestão de eventos esportivos.
 
 | Serviço | Plataforma | Link |
 |---------|-----------|------|
-| Frontend | Vercel | *(criar projeto na Vercel)* |
+| Frontend | Vercel | `https://mvp-esportivo.vercel.app` |
 | Backend | Fly.io | `https://mvp-backend-little-woodland-6494.fly.dev` |
 | Banco | Neon | `ep-tiny-moon-acrrprlb.sa-east-1.aws.neon.tech` |
 
@@ -21,7 +21,6 @@ Sistema de gestão de eventos esportivos.
 ## Pré-requisitos
 
 - Node.js 20+
-- Docker (opcional, para dev local)
 - Contas em: [Neon](https://neon.tech), [Fly.io](https://fly.io), [Vercel](https://vercel.com)
 
 ---
@@ -29,83 +28,53 @@ Sistema de gestão de eventos esportivos.
 ## Neon (Banco PostgreSQL)
 
 1. Crie uma conta em [neon.tech](https://neon.tech)
-2. Crie um projeto (qualquer nome, região mais próxima)
-3. Na aba **Connection Details**, copie a `DATABASE_URL` (Pooled ou Unpooled)
-4. Salve a string — ela será usada no Fly.io e nos secrets do GitHub
+2. Crie um projeto
+3. Na aba **Connection Details**, copie a `DATABASE_URL`
+4. Use nos secrets do Fly.io e nos comandos locais
 
 ```bash
-# Exemplo de DATABASE_URL
 DATABASE_URL="postgresql://user:pass@ep-xxxx.us-east-2.aws.neon.tech/neondb?sslmode=require"
 ```
 
 ### Migrations
 
-Execute da sua máquina local, apontando `DATABASE_URL` para o Neon:
-
 ```bash
 cd backend
-DATABASE_URL="<sua-url-do-neon>" npx prisma migrate deploy
+set DATABASE_URL="<url-neon>"&& npx prisma migrate deploy
 ```
 
 ### Seed
 
-O seed usa `ts-node` (devDependency). Execute localmente com a mesma `DATABASE_URL`:
-
 ```bash
 cd backend
-DATABASE_URL="<sua-url-do-neon>" npx prisma db seed
+set DATABASE_URL="<url-neon>"&& npx prisma db seed
 ```
+
+O seed cria admin `admin@admin.com` / `123456` (idempotente).
 
 ---
 
 ## Backend (Fly.io)
 
-### 1. Instalar Fly CLI
-
 ```bash
-# Windows (PowerShell)
-iwr https://fly.io/install.ps1 -useb | iex
-
-# Linux/macOS
-curl -L https://fly.io/install.sh | sh
-```
-
-### 2. Login e criar app
-
-```bash
-fly auth login
 cd backend
-fly launch --no-deploy
+flyctl deploy --remote-only
 ```
 
-Responda:
-- Nome: `mvp-backend` (ou outro)
-- Região: `gru` (São Paulo) ou a mais próxima
-- Responda **Y (Yes)** para manter o `fly.toml` existente
-
-### 3. Configurar secrets
+### Secrets
 
 ```bash
-fly secrets set DATABASE_URL="postgresql://..."
-fly secrets set JWT_SECRET="<hash-seguro>"
-fly secrets set FRONTEND_URL="https://<projeto>.vercel.app"
-```
-
-### 4. Deploy manual
-
-```bash
-fly deploy
+fly secrets set DATABASE_URL="<neon-url>"
+fly secrets set JWT_SECRET="<hash>"
+fly secrets set FRONTEND_URL="https://mvp-esportivo.vercel.app"
 ```
 
 ### Healthcheck
 
-Após o deploy, acesse:
-
 ```
-GET https://<app>.fly.dev/api/v1/health
+GET https://mvp-backend-little-woodland-6494.fly.dev/api/v1/health
 ```
 
-Resposta esperada:
 ```json
 { "status": "ok", "database": "connected", "uptime": 42, "timestamp": "..." }
 ```
@@ -114,67 +83,117 @@ Resposta esperada:
 
 ## Frontend (Vercel)
 
-### 1. Criar projeto na Vercel
-
-- Importe o repositório do GitHub
-- Framework: **Next.js**
+- Repositório GitHub → Vercel (importar)
 - Root directory: `frontend/`
+- Framework: Next.js
 - Build command: `npm run build`
-- Output directory: `.next`
-
-### 2. Variáveis de ambiente
-
-| Nome | Valor |
-|------|-------|
-| `NEXT_PUBLIC_API_URL` | `https://<app>.fly.dev` |
-
-### 3. Deploy automático
-
-Push na branch `main` → Vercel detecta e faz deploy automático.
+- Deploy automático via push na `master`
 
 ---
 
-## CI/CD (GitHub Actions)
+## Features Implementadas
 
-### Secrets necessários
+### MVP 1 — Auth + Eventos
+- JWT login, CRUD de eventos, Swagger
 
-No repositório GitHub → Settings → Secrets and variables → Actions:
+### MVP 2 — Docker + Deploy
+- Dockerfile node:20-slim, Fly.io deploy, Neon DB, healthcheck
 
-| Secret | Descrição |
-|--------|-----------|
-| `FLY_API_TOKEN` | Token de deploy do Fly.io (`fly tokens create deploy`) |
-| `VERCEL_TOKEN` | Token da Vercel (Account → Settings → Tokens) |
-| `VERCEL_ORG_ID` | ID da organização na Vercel |
-| `VERCEL_PROJECT_ID` | ID do projeto na Vercel |
-| `NEXT_PUBLIC_API_URL` | URL do backend em produção |
+### MVP 3 — CI/CD
+- GitHub Actions: build + deploy automático (Fly.io backend, Vercel frontend)
 
-### Fluxo
+### MVP 4 — Frontend Eventos
+- Tailwind + Shadcn, login, eventos CRUD UI
 
-Push na `main` (com alterações em `backend/` ou `frontend/`):
-1. Build e validação
-2. Deploy automático (Fly.io para backend, Vercel para frontend)
+### MVP 5 — Modalidades por Evento
+- Vincular/desvincular esportes a eventos
+
+### MVP 6 — Cidades CRUD
+- CRUD completo de cidades com nome/estado/UF
+
+### MVP 7 — Inscrição de Cidades
+- Inscrever cidades em modalidades com status INSCRITO/CONFIRMADO/DESISTENTE
+
+### MVP 8 — Grupos
+- Geração automática round-robin com shuffle
+- Distribuição equilibrada, regerar com confirmação
+
+### MVP 9 — Partidas
+- Geração round-robin de confrontos dentro dos grupos
+- Edição inline de placares (homeScore x awayScore)
+- Status SCHEDULED / IN_PROGRESS / FINISHED / CANCELLED
 
 ---
 
-## Checklist Produção — Status Atual
+## Rotas da API
 
-- [x] 1. Criar banco Neon e copiar `DATABASE_URL`
-- [x] 2. Configurar Fly.io: `fly launch --no-deploy` no `backend/`
-- [ ] 3. Configurar Vercel: importar repositório, apontar `frontend/`
-- [ ] 4. Adicionar secrets no GitHub:
-  - `FLY_API_TOKEN`
-  - `VERCEL_TOKEN`
-  - `VERCEL_ORG_ID`
-  - `VERCEL_PROJECT_ID`
-  - `NEXT_PUBLIC_API_URL`
-- [x] 5. Adicionar secrets no Fly.io:
-  - `DATABASE_URL`
-  - `JWT_SECRET`
-  - `FRONTEND_URL` *(pendente — definir após Vercel)*
-- [ ] 6. Adicionar variável na Vercel:
-  - `NEXT_PUBLIC_API_URL` = `https://mvp-backend-little-woodland-6494.fly.dev`
-- [x] 7. Executar primeiro deploy manual do backend (`fly deploy`)
-- [x] 8. Executar `npx prisma migrate deploy` no banco Neon
-- [x] 9. Executar `npx prisma db seed` para criar admin (`admin@admin.com` / `123456`)
-- [x] 10. Verificar healthcheck: `GET /api/v1/health` → `{"status":"ok","database":"connected"}`
-- [x] 11. Testar login: `POST /api/v1/auth/login` → token JWT recebido
+### Auth
+| Método | Rota | Descrição |
+|--------|------|-----------|
+| POST | `/api/v1/auth/register` | Registrar |
+| POST | `/api/v1/auth/login` | Login |
+
+### Events
+| Método | Rota | Descrição |
+|--------|------|-----------|
+| GET | `/api/v1/events` | Listar |
+| GET | `/api/v1/events/:id` | Detalhar |
+| POST | `/api/v1/events` | Criar |
+| PUT | `/api/v1/events/:id` | Atualizar |
+| DELETE | `/api/v1/events/:id` | Remover |
+
+### Sports
+| Método | Rota | Descrição |
+|--------|------|-----------|
+| GET | `/api/v1/sports` | Listar modalidades |
+
+### Event-Sports
+| Método | Rota | Descrição |
+|--------|------|-----------|
+| GET | `/api/v1/events/:id/sports` | Modalidades do evento |
+| POST | `/api/v1/events/:id/sports` | Vincular |
+| DELETE | `/api/v1/events/:id/sports/:sportId` | Desvincular |
+
+### Cities
+| Método | Rota | Descrição |
+|--------|------|-----------|
+| GET | `/api/v1/cities` | Listar |
+| GET | `/api/v1/cities/:id` | Detalhar |
+| POST | `/api/v1/cities` | Criar |
+| PUT | `/api/v1/cities/:id` | Atualizar |
+| DELETE | `/api/v1/cities/:id` | Remover |
+
+### Event-Sport-Cities
+| Método | Rota | Descrição |
+|--------|------|-----------|
+| GET | `/api/v1/event-sports/:id/cities` | Cidades inscritas |
+| POST | `/api/v1/event-sports/:id/cities` | Inscrever cidade |
+| DELETE | `/api/v1/event-sports/:id/cities/:cityId` | Remover inscrição |
+
+### Groups
+| Método | Rota | Descrição |
+|--------|------|-----------|
+| GET | `/api/v1/event-sports/:id/groups` | Listar grupos |
+| POST | `/api/v1/event-sports/:id/groups/generate` | Gerar grupos |
+| DELETE | `/api/v1/event-sports/:id/groups` | Excluir grupos |
+
+### Matches
+| Método | Rota | Descrição |
+|--------|------|-----------|
+| GET | `/api/v1/groups/:id/matches` | Listar partidas |
+| POST | `/api/v1/groups/:id/matches/generate` | Gerar partidas |
+| DELETE | `/api/v1/groups/:id/matches` | Excluir partidas |
+| PUT | `/api/v1/matches/:id` | Atualizar partida |
+
+---
+
+## Checklist Produção
+
+- [x] 1. Banco Neon criado
+- [x] 2. Fly.io configurado
+- [x] 3. Vercel configurado (`mvp-esportivo.vercel.app`)
+- [x] 4. Secrets Fly.io: `DATABASE_URL`, `JWT_SECRET`, `FRONTEND_URL`
+- [x] 5. Migrations aplicadas (0001 a 0006)
+- [x] 6. Seed executado
+- [x] 7. Healthcheck: `database: "connected"`
+- [x] 8. CI/CD GitHub Actions configurado
