@@ -62,7 +62,6 @@ model Event {
 
   eventSports EventSport[]
   teams       Team[]
-  groups      Group[]
   matchs      Match[]
 }
 
@@ -74,7 +73,6 @@ model Sport {
 
   eventSports EventSport[]
   teams       Team[]
-  groups      Group[]
   matchs      Match[]
 }
 
@@ -88,6 +86,7 @@ model EventSport {
   sport Sport @relation(fields: [sportId], references: [id], onDelete: Restrict)
 
   eventSportCities EventSportCity[]
+  groups           Group[]
 
   @@unique([eventId, sportId])
 }
@@ -99,8 +98,9 @@ model EventSportCity {
   status       InscricaoStatus @default(INSCRITO)
   createdAt    DateTime        @default(now())
 
-  eventSport EventSport @relation(fields: [eventSportId], references: [id], onDelete: Cascade)
-  city       City       @relation(fields: [cityId], references: [id], onDelete: Restrict)
+  eventSport       EventSport       @relation(fields: [eventSportId], references: [id], onDelete: Cascade)
+  city             City             @relation(fields: [cityId], references: [id], onDelete: Restrict)
+  groupParticipant GroupParticipant?
 
   @@unique([eventSportId, cityId])
 }
@@ -138,16 +138,26 @@ model Team {
 }
 
 model Group {
-  id        String   @id @default(uuid()) @db.Uuid
-  nome      String
-  eventId   String   @db.Uuid
-  sportId   String   @db.Uuid
-  createdAt DateTime @default(now())
+  id            String   @id @default(uuid()) @db.Uuid
+  nome          String
+  eventSportId  String   @db.Uuid
+  createdAt     DateTime @default(now())
 
-  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  sport Sport @relation(fields: [sportId], references: [id], onDelete: Restrict)
+  eventSport EventSport @relation(fields: [eventSportId], references: [id], onDelete: Cascade)
 
-  @@unique([nome, eventId, sportId])
+  groupParticipants GroupParticipant[]
+
+  @@unique([nome, eventSportId])
+}
+
+model GroupParticipant {
+  id               String   @id @default(uuid()) @db.Uuid
+  groupId          String   @db.Uuid
+  eventSportCityId String   @db.Uuid @unique
+  createdAt        DateTime @default(now())
+
+  group          Group          @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  eventSportCity EventSportCity @relation(fields: [eventSportCityId], references: [id], onDelete: Cascade)
 }
 
 model Match {

@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { eventsApi, type EventData } from '@/services/events';
 import { eventSportsApi, type EventSportData } from '@/services/event-sports';
 import { eventSportCitiesApi, type EventSportCityData } from '@/services/event-sport-cities';
+import { eventSportGroupsApi, type GroupData } from '@/services/event-sport-groups';
 import { useAuth } from '@/contexts/auth-context';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
@@ -22,6 +23,7 @@ export default function EventDetailPage() {
   const [event, setEvent] = useState<EventData | null>(null);
   const [sports, setSports] = useState<EventSportData[]>([]);
   const [participants, setParticipants] = useState<Record<string, EventSportCityData[]>>({});
+  const [groups, setGroups] = useState<Record<string, GroupData[]>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -60,20 +62,38 @@ export default function EventDetailPage() {
     setParticipants(result);
   }, []);
 
+  const fetchGroups = useCallback(async (sportsData: EventSportData[]) => {
+    const result: Record<string, GroupData[]> = {};
+    for (const es of sportsData) {
+      try {
+        result[es.id] = await eventSportGroupsApi.list(es.id);
+      } catch {
+        result[es.id] = [];
+      }
+    }
+    setGroups(result);
+  }, []);
+
   useEffect(() => {
     async function load() {
       await fetchEvent();
       const sportsData = await fetchSports();
-      if (sportsData.length > 0) fetchParticipants(sportsData);
+      if (sportsData.length > 0) {
+        fetchParticipants(sportsData);
+        fetchGroups(sportsData);
+      }
     }
     load();
-  }, [fetchEvent, fetchSports, fetchParticipants]);
+  }, [fetchEvent, fetchSports, fetchParticipants, fetchGroups]);
 
   async function handleRemoveSport(sportId: string) {
     try {
       await eventSportsApi.remove(params.id as string, sportId);
       const data = await fetchSports();
-      if (data.length > 0) fetchParticipants(data);
+      if (data.length > 0) {
+        fetchParticipants(data);
+        fetchGroups(data);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro ao remover modalidade');
     }
@@ -85,6 +105,49 @@ export default function EventDetailPage() {
       fetchParticipants(sports);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro ao remover participante');
+    }
+  }
+
+  async function handleGenerateGroups(eventSportId: string) {
+    const groupCountStr = prompt('Quantidade de grupos?');
+    if (!groupCountStr) return;
+    const groupCount = parseInt(groupCountStr, 10);
+    if (isNaN(groupCount) || groupCount < 1) {
+      setError('Informe um número válido de grupos.');
+      return;
+    }
+    try {
+      await eventSportGroupsApi.generate(eventSportId, groupCount);
+      fetchGroups(sports);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erro ao gerar grupos');
+    }
+  }
+
+  async function handleRegenerateGroups(eventSportId: string) {
+    if (!window.confirm('Tem certeza que deseja regerar os grupos? Os grupos atuais serão excluídos.')) return;
+    const groupCountStr = prompt('Quantidade de grupos?');
+    if (!groupCountStr) return;
+    const groupCount = parseInt(groupCountStr, 10);
+    if (isNaN(groupCount) || groupCount < 1) {
+      setError('Informe um número válido de grupos.');
+      return;
+    }
+    try {
+      await eventSportGroupsApi.generate(eventSportId, groupCount);
+      fetchGroups(sports);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erro ao regerar grupos');
+    }
+  }
+
+  async function handleRemoveGroups(eventSportId: string) {
+    if (!window.confirm('Tem certeza que deseja excluir todos os grupos?')) return;
+    try {
+      await eventSportGroupsApi.remove(eventSportId);
+      fetchGroups(sports);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erro ao excluir grupos');
     }
   }
 
@@ -187,6 +250,42 @@ export default function EventDetailPage() {
                         </Button>
                       </div>
                     )}
+                    <div className="border-t px-3 py-2">
+                      <h4 className="text-xs font-semibold uppercase text-muted-foreground mb-2">Grupos</h4>
+                      {token && (
+                        <div className="flex gap-2 mb-2">
+                          <Button variant="outline" size="sm" onClick={() => handleGenerateGroups(es.id)}>
+                            Gerar Grupos
+                          </Button>
+                          {(groups[es.id]?.length ?? 0) > 0 && (
+                            <>
+                              <Button variant="outline" size="sm" onClick={() => handleRegenerateGroups(es.id)}>
+                                Regerar Grupos
+                              </Button>
+                              <Button variant="ghost" size="sm" className="text-destructive" onClick={() => handleRemoveGroups(es.id)}>
+                                Excluir Grupos
+                              </Button>
+                            </>
+                          )}
+                        </div>
+                      )}
+                      {!groups[es.id] || groups[es.id].length === 0 ? (
+                        <p className="text-xs text-muted-foreground">Nenhum grupo gerado.</p>
+                      ) : (
+                        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                          {groups[es.id].map((g) => (
+                            <div key={g.id} className="rounded-md border bg-muted/20 p-2">
+                              <p className="text-xs font-semibold mb-1">{g.nome}</p>
+                              <ul className="text-xs space-y-0.5">
+                                {g.groupParticipants.map((gp) => (
+                                  <li key={gp.id}>{gp.eventSportCity.city.nome}</li>
+                                ))}
+                              </ul>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 );
               })}
