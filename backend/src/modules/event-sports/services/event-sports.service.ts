@@ -36,9 +36,17 @@ export class EventSportsService {
     });
     if (existing) throw new ConflictException('Modalidade já vinculada a este evento');
 
-    return this.prisma.eventSport.create({
+    const eventSport = await this.prisma.eventSport.create({
       data: { eventId, sportId },
-      include: { sport: true },
+    });
+
+    await this.prisma.competitionFormat.create({
+      data: { eventSportId: eventSport.id },
+    });
+
+    return this.prisma.eventSport.findUnique({
+      where: { id: eventSport.id },
+      include: { sport: true, competitionFormat: true },
     });
   }
 

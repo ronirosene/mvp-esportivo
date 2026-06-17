@@ -4,9 +4,10 @@ import { useEffect, useState, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { eventsApi, type EventData } from '@/services/events';
 import { eventSportsApi, type EventSportData } from '@/services/event-sports';
-import { eventSportGroupsApi, type GroupData } from '@/services/event-sport-groups';
 import { eventSportCitiesApi, type EventSportCityData } from '@/services/event-sport-cities';
+import { eventSportGroupsApi, type GroupData } from '@/services/event-sport-groups';
 import { playoffsApi } from '@/services/playoffs';
+import { competitionFormatsApi, type FormatType, type CompetitionFormatData } from '@/services/competition-formats';
 import type { MatchData } from '@/services/matches';
 import { useAuth } from '@/contexts/auth-context';
 import { Button } from '@/components/ui/button';
@@ -29,6 +30,9 @@ export default function EventDetailPage() {
 const [playoffs, setPlayoffs] = useState<Record<string, MatchData[]>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [configuringId, setConfiguringId] = useState<string | null>(null);
+  const [configForm, setConfigForm] = useState<Partial<CompetitionFormatData>>({});
+  const [formatConfig, setFormatConfig] = useState<Record<string, CompetitionFormatData>>({});
 
   const fetchEvent = useCallback(async () => {
     setLoading(true);
@@ -89,6 +93,17 @@ const [playoffs, setPlayoffs] = useState<Record<string, MatchData[]>>({});
     setPlayoffs(result);
   }, []);
 
+  const fetchFormats = useCallback(async (sportsData: EventSportData[]) => {
+    const result: Record<string, CompetitionFormatData> = {};
+    for (const es of sportsData) {
+      try {
+        result[es.id] = await competitionFormatsApi.get(es.id);
+      } catch {
+      }
+    }
+    setFormatConfig(result);
+  }, []);
+
   useEffect(() => {
     async function load() {
       await fetchEvent();
@@ -97,6 +112,7 @@ const [playoffs, setPlayoffs] = useState<Record<string, MatchData[]>>({});
         fetchParticipants(sportsData);
         fetchGroups(sportsData);
         fetchPlayoffs(sportsData);
+        fetchFormats(sportsData);
       }
     }
     load();
@@ -124,23 +140,12 @@ const [playoffs, setPlayoffs] = useState<Record<string, MatchData[]>>({});
     }
   }
 
-  async function handleCreateGroup(eventSportId: string) {
-    const nome = prompt('Nome do grupo (ex: Grupo A):');
-    if (!nome) return;
-    try {
-      await eventSportGroupsApi.create(eventSportId, nome);
-      fetchGroups(sports);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erro ao criar grupo');
-    }
-  }
-
   async function handleGenerateGroups(eventSportId: string) {
     const groupCountStr = prompt('Quantidade de grupos?');
     if (!groupCountStr) return;
     const groupCount = parseInt(groupCountStr, 10);
     if (isNaN(groupCount) || groupCount < 1) {
-      setError('Informe um número válido de grupos.');
+      setError('Informe um n??mero v??lido de grupos.');
       return;
     }
     try {
@@ -152,12 +157,12 @@ const [playoffs, setPlayoffs] = useState<Record<string, MatchData[]>>({});
   }
 
   async function handleRegenerateGroups(eventSportId: string) {
-    if (!window.confirm('Tem certeza que deseja regerar os grupos? Os grupos atuais serão excluídos.')) return;
+    if (!window.confirm('Tem certeza que deseja regerar os grupos? Os grupos atuais ser??o exclu??dos.')) return;
     const groupCountStr = prompt('Quantidade de grupos?');
     if (!groupCountStr) return;
     const groupCount = parseInt(groupCountStr, 10);
     if (isNaN(groupCount) || groupCount < 1) {
-      setError('Informe um número válido de grupos.');
+      setError('Informe um n??mero v??lido de grupos.');
       return;
     }
     try {
@@ -183,7 +188,7 @@ const [playoffs, setPlayoffs] = useState<Record<string, MatchData[]>>({});
       await playoffsApi.generate(eventSportId);
       fetchPlayoffs(sports);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erro ao gerar eliminatórias');
+      setError(err instanceof Error ? err.message : 'Erro ao gerar eliminat??rias');
     }
   }
 
@@ -192,24 +197,12 @@ const [playoffs, setPlayoffs] = useState<Record<string, MatchData[]>>({});
       await playoffsApi.advance(eventSportId);
       fetchPlayoffs(sports);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erro ao avançar fase');
-    }
-  }
-
-  async function handleToggleDrawMode(eventSportId: string) {
-    const es = sports.find((s) => s.id === eventSportId);
-    if (!es) return;
-    const newMode = es.drawMode === 'MANUAL' ? 'AUTOMATIC' : 'MANUAL';
-    try {
-      await eventSportsApi.update(params.id as string, eventSportId, { drawMode: newMode as any });
-      fetchSports();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erro ao alterar modo');
+      setError(err instanceof Error ? err.message : 'Erro ao avan??ar fase');
     }
   }
 
   async function handleUpdateConfig(eventSportId: string) {
-    const countStr = prompt('Classificados por grupo? (padrão: 2)');
+    const countStr = prompt('Classificados por grupo? (padr??o: 2)');
     if (!countStr) return;
     const count = parseInt(countStr, 10);
     if (isNaN(count) || count < 1) return;
@@ -221,13 +214,23 @@ const [playoffs, setPlayoffs] = useState<Record<string, MatchData[]>>({});
       });
       fetchPlayoffs(sports);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erro ao salvar configuração');
+      setError(err instanceof Error ? err.message : 'Erro ao salvar configura????o');
+    }
+  }
+
+  async function handleSaveFormatConfig(eventSportId: string) {
+    try {
+      const updated = await competitionFormatsApi.upsert(eventSportId, configForm);
+      setFormatConfig((prev) => ({ ...prev, [eventSportId]: updated }));
+      setConfiguringId(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erro ao salvar configura????o');
     }
   }
 
   if (loading) return <p className="text-muted-foreground">Carregando...</p>;
   if (error) return <p className="text-destructive">{error}</p>;
-  if (!event) return <p className="text-muted-foreground">Evento não encontrado.</p>;
+  if (!event) return <p className="text-muted-foreground">Evento n??o encontrado.</p>;
 
   return (
     <div className="space-y-6">
@@ -242,7 +245,7 @@ const [playoffs, setPlayoffs] = useState<Record<string, MatchData[]>>({});
       <div className="grid gap-4 md:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Informações</CardTitle>
+            <CardTitle className="text-lg">Informa????es</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3 text-sm">
             <div className="flex justify-between">
@@ -266,16 +269,74 @@ const [playoffs, setPlayoffs] = useState<Record<string, MatchData[]>>({});
           </CardHeader>
           <CardContent className="space-y-3 text-sm">
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Data Início</span>
+              <span className="text-muted-foreground">Data In??cio</span>
               <span>{new Date(event.dataInicio).toLocaleDateString('pt-BR')}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">Data Fim</span>
               <span>{new Date(event.dataFim).toLocaleDateString('pt-BR')}</span>
             </div>
-          </CardContent>
+        </CardContent>
         </Card>
-      </div>
+
+        {configuringId && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => setConfiguringId(null)}>
+            <Card className="w-full max-w-md mx-4" onClick={(e) => e.stopPropagation()}>
+              <CardHeader>
+                <CardTitle className="text-lg">Formato da Competição</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <label className="text-xs font-medium mb-1 block">Formato</label>
+                  <select className="w-full rounded border px-2 py-1.5 text-sm" value={configForm.formatType || 'GROUP_STAGE'} onChange={(e) => setConfigForm((p) => ({ ...p, formatType: e.target.value as FormatType }))}>
+                    <option value="GROUP_STAGE">Grupos + Mata-Mata</option>
+                    <option value="ROUND_ROBIN">Todos Contra Todos</option>
+                    <option value="KNOCKOUT">Eliminação Direta</option>
+                    <option value="MANUAL">Manual</option>
+                  </select>
+                </div>
+
+                {(configForm.formatType === 'GROUP_STAGE' || configForm.formatType === 'ROUND_ROBIN') && (
+                  <div className="grid grid-cols-2 gap-3">
+                    {configForm.formatType === 'GROUP_STAGE' && (
+                      <>
+                        <div>
+                          <label className="text-xs font-medium mb-1 block">Grupos</label>
+                          <input type="number" min="1" className="w-full rounded border px-2 py-1.5 text-sm" value={configForm.groupCount ?? 2} onChange={(e) => setConfigForm((p) => ({ ...p, groupCount: parseInt(e.target.value) || 1 }))} />
+                        </div>
+                        <div>
+                          <label className="text-xs font-medium mb-1 block">Classif. por grupo</label>
+                          <input type="number" min="1" className="w-full rounded border px-2 py-1.5 text-sm" value={configForm.qualifiedPerGroup ?? 2} onChange={(e) => setConfigForm((p) => ({ ...p, qualifiedPerGroup: parseInt(e.target.value) || 1 }))} />
+                        </div>
+                      </>
+                    )}
+                    <div className="flex items-center gap-2 col-span-2">
+                      <input type="checkbox" id="thirdPlace" checked={configForm.thirdPlaceMatch ?? true} onChange={(e) => setConfigForm((p) => ({ ...p, thirdPlaceMatch: e.target.checked }))} />
+                      <label htmlFor="thirdPlace" className="text-sm">Disputa de terceiro lugar</label>
+                    </div>
+                  </div>
+                )}
+
+                {configForm.formatType === 'KNOCKOUT' && (
+                  <div className="flex items-center gap-2">
+                    <input type="checkbox" id="manualBracket" checked={configForm.manualBracket ?? false} onChange={(e) => setConfigForm((p) => ({ ...p, manualBracket: e.target.checked }))} />
+                    <label htmlFor="manualBracket" className="text-sm">Chaveamento manual</label>
+                  </div>
+                )}
+
+                {configForm.formatType === 'MANUAL' && (
+                  <p className="text-sm text-muted-foreground">O organizador cria grupos, partidas e confrontos manualmente.</p>
+                )}
+
+                <div className="flex justify-end gap-2 pt-2">
+                  <Button variant="outline" onClick={() => setConfiguringId(null)}>Cancelar</Button>
+                  <Button onClick={() => handleSaveFormatConfig(configuringId)}>Salvar</Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+    </div>
 
       <Card>
         <CardHeader>
@@ -294,19 +355,11 @@ const [playoffs, setPlayoffs] = useState<Record<string, MatchData[]>>({});
                       <div>
                         <span className="text-sm font-medium">{es.sport.nome}</span>
                         <span className="ml-2 text-xs text-muted-foreground">{es.sport.categoria}</span>
-                        <span className={`ml-2 inline-block rounded-full px-2 py-0.5 text-xs font-semibold ${es.drawMode === 'MANUAL' ? 'bg-amber-100 text-amber-800' : 'bg-green-100 text-green-800'}`}>
-                          {es.drawMode === 'MANUAL' ? 'MANUAL' : 'AUTOMÁTICO'}
-                        </span>
                       </div>
                       {token && (
-                        <div className="flex gap-1">
-                          <Button variant="outline" size="sm" className="text-xs h-7" onClick={() => handleToggleDrawMode(es.id)}>
-                            Modo {es.drawMode === 'MANUAL' ? 'Automático' : 'Manual'}
-                          </Button>
-                          <Button variant="ghost" size="sm" className="text-destructive" onClick={() => handleRemoveSport(es.sport.id)}>
-                            Remover
-                          </Button>
-                        </div>
+                        <Button variant="ghost" size="sm" className="text-destructive" onClick={() => handleRemoveSport(es.sport.id)}>
+                          Remover
+                        </Button>
                       )}
                     </div>
                     {parts.length === 0 ? (
@@ -336,29 +389,27 @@ const [playoffs, setPlayoffs] = useState<Record<string, MatchData[]>>({});
                       {token && (
                         <div className="flex gap-2 mb-2">
                           <Button variant="outline" size="sm" onClick={() => handleUpdateConfig(es.id)}>
-                            Config. Eliminatórias
+                            Config. Eliminat??rias
                           </Button>
                         </div>
                       )}
                       <h4 className="text-xs font-semibold uppercase text-muted-foreground mb-2">Grupos</h4>
                       {token && (
-                        <div className="flex gap-2 mb-2 flex-wrap">
-                          {es.drawMode === 'MANUAL' ? (
-                            <Button variant="outline" size="sm" onClick={() => handleCreateGroup(es.id)}>
-                              Criar Grupo
-                            </Button>
-                          ) : (
-                            <Button variant="outline" size="sm" onClick={() => handleGenerateGroups(es.id)}>
-                              Gerar Grupos
-                            </Button>
-                          )}
+                        <div className="flex gap-2 mb-2">
+                          <Button variant="outline" size="sm" onClick={() => {
+                            setConfigForm(formatConfig[es.id] || {});
+                            setConfiguringId(es.id);
+                          }}>
+                            Formato
+                          </Button>
+                          <Button variant="outline" size="sm" onClick={() => handleGenerateGroups(es.id)}>
+                            Gerar Grupos
+                          </Button>
                           {(groups[es.id]?.length ?? 0) > 0 && (
                             <>
-                              {es.drawMode !== 'MANUAL' && (
-                                <Button variant="outline" size="sm" onClick={() => handleRegenerateGroups(es.id)}>
-                                  Regerar Grupos
-                                </Button>
-                              )}
+                              <Button variant="outline" size="sm" onClick={() => handleRegenerateGroups(es.id)}>
+                                Regerar Grupos
+                              </Button>
                               <Button variant="ghost" size="sm" className="text-destructive" onClick={() => handleRemoveGroups(es.id)}>
                                 Excluir Grupos
                               </Button>
@@ -387,15 +438,15 @@ const [playoffs, setPlayoffs] = useState<Record<string, MatchData[]>>({});
                       )}
                     </div>
                     <div className="border-t px-3 py-2">
-                      <h4 className="text-xs font-semibold uppercase text-muted-foreground mb-2">Eliminatórias</h4>
+                      <h4 className="text-xs font-semibold uppercase text-muted-foreground mb-2">Eliminat??rias</h4>
                       {token && (
                         <div className="flex gap-2 mb-2">
                           <Button variant="outline" size="sm" onClick={() => handleGeneratePlayoffs(es.id)}>
-                            Gerar Eliminatórias
+                            Gerar Eliminat??rias
                           </Button>
                           {(playoffs[es.id]?.length ?? 0) > 0 && (
                             <Button variant="outline" size="sm" onClick={() => handleAdvancePlayoffs(es.id)}>
-                              Avançar Fase
+                              Avan??ar Fase
                             </Button>
                           )}
                         </div>

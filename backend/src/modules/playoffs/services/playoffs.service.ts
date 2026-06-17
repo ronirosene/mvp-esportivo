@@ -21,10 +21,26 @@ export class PlayoffsService {
     });
   }
 
+  private async getFormat(eventSportId: string) {
+    let fmt = await this.prisma.competitionFormat.findUnique({ where: { eventSportId } });
+    if (!fmt) {
+      const es = await this.prisma.eventSport.findUnique({ where: { id: eventSportId } });
+      if (!es) throw new NotFoundException('Modalidade não encontrada');
+      fmt = await this.prisma.competitionFormat.create({
+        data: {
+          eventSportId,
+          qualifiedPerGroup: es.classificationCount,
+          thirdPlaceMatch: es.generateThirdPlace,
+          manualBracket: es.drawMode === 'MANUAL',
+        },
+      });
+    }
+    return fmt;
+  }
+
   async generate(eventSportId: string) {
     this.checkDb();
-    const es = await this.prisma.eventSport.findUnique({ where: { id: eventSportId } });
-    if (!es) throw new NotFoundException('Modalidade não encontrada');
+    const fmt = await this.getFormat(eventSportId);
 
     const groups = await this.prisma.group.findMany({
       where: { eventSportId },
@@ -32,7 +48,7 @@ export class PlayoffsService {
         standings: {
           include: { city: true },
           orderBy: { position: 'asc' },
-          take: es.classificationCount,
+          take: fmt.qualifiedPerGroup,
         },
       },
       orderBy: { nome: 'asc' },
@@ -44,8 +60,8 @@ export class PlayoffsService {
 
     const qualified: { cityId: string; groupIndex: number; position: number }[] = [];
     for (const group of groups) {
-      const top = group.standings.slice(0, es.classificationCount);
-      if (top.length < es.classificationCount) {
+      const top = group.standings.slice(0, fmt.qualifiedPerGroup);
+      if (top.length < fmt.qualifiedPerGroup) {
         throw new BadRequestException(`Grupo ${group.nome} não possui classificação completa.`);
       }
       for (const s of top) {
@@ -58,7 +74,6 @@ export class PlayoffsService {
     });
 
     const groupCount = groups.length;
-    const perGroup = es.classificationCount;
     const firsts = qualified.filter((q) => q.position === 1);
     const seconds = qualified.filter((q) => q.position === 2);
 
@@ -83,21 +98,7 @@ export class PlayoffsService {
 
   async advance(eventSportId: string) {
     this.checkDb();
-    const es = await this.prisma.eventSport.findUnique({ where: { id: eventSportId } });
-    if (!es) throw new NotFoundException('Modalidade não encontrada');
-
-    const phases: Fase[] = ['QUARTAS', 'SEMIFINAL'];
-    let currentPhase: Fase | null = null;
-
-    for (const fase of phases) {
-      const matches = await this.prisma.match.findMany({
-        where: { eventSportId, fase },
-      });
-      if (matches.length > 0) {
-        currentPhase = fase;
-        break;
-      }
-    }
+    const fmt = await this.getFormat(eventSportId);
 
     const semis = await this.prisma.match.findMany({
       where: { eventSportId, fase: 'SEMIFINAL' },
@@ -124,7 +125,7 @@ export class PlayoffsService {
         data: { eventSportId, homeCityId: winners[0], awayCityId: winners[1], status: 'SCHEDULED', fase: 'FINAL' },
       });
 
-      if (es.generateThirdPlace) {
+      if (fmt.thirdPlaceMatch) {
         await this.prisma.match.create({
           data: { eventSportId, homeCityId: losers[0], awayCityId: losers[1], status: 'SCHEDULED', fase: 'TERCEIRO_LUGAR' },
         });

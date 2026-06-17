@@ -38,6 +38,13 @@ enum DrawMode {
   MANUAL
 }
 
+enum FormatType {
+  GROUP_STAGE
+  ROUND_ROBIN
+  KNOCKOUT
+  MANUAL
+}
+
 enum InscricaoStatus {
   INSCRITO
   CONFIRMADO
@@ -92,9 +99,10 @@ model EventSport {
   event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
   sport Sport @relation(fields: [sportId], references: [id], onDelete: Restrict)
 
-  eventSportCities EventSportCity[]
-  groups           Group[]
-  matches          Match[]
+  eventSportCities   EventSportCity[]
+  groups             Group[]
+  matches            Match[]
+  competitionFormat  CompetitionFormat?
 
   @@unique([eventId, sportId])
 }
@@ -111,6 +119,20 @@ model EventSportCity {
   groupParticipant GroupParticipant?
 
   @@unique([eventSportId, cityId])
+}
+
+model CompetitionFormat {
+  id               String     @id @default(uuid()) @db.Uuid
+  eventSportId     String     @unique @db.Uuid
+  formatType       FormatType @default(GROUP_STAGE)
+  groupCount       Int        @default(2)
+  qualifiedPerGroup Int       @default(2)
+  thirdPlaceMatch  Boolean    @default(true)
+  manualBracket    Boolean    @default(false)
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+
+  eventSport EventSport @relation(fields: [eventSportId], references: [id], onDelete: Cascade)
 }
 
 model City {

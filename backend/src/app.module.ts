@@ -11,8 +11,9 @@ import { GroupsModule } from './modules/groups/groups.module';
 import { MatchesModule } from './modules/matches/matches.module';
 import { StandingsModule } from './modules/standings/standings.module';
 import { PlayoffsModule } from './modules/playoffs/playoffs.module';
+import { CompetitionFormatsModule } from './modules/competition-formats/competition-formats.module';
 
 @Module({
-  imports: [EnvConfigModule, PrismaModule, HealthModule, AuthModule, EventsModule, EventSportsModule, CitiesModule, EventSportCitiesModule, GroupsModule, MatchesModule, StandingsModule, PlayoffsModule],
+  imports: [EnvConfigModule, PrismaModule, HealthModule, AuthModule, EventsModule, EventSportsModule, CitiesModule, EventSportCitiesModule, GroupsModule, MatchesModule, StandingsModule, PlayoffsModule, CompetitionFormatsModule],
 })
 export class AppModule {}
