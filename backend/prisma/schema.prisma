@@ -118,6 +118,7 @@ model City {
   teams            Team[]
   homeMatches      Match[]         @relation("homeMatches")
   awayMatches      Match[]         @relation("awayMatches")
+  groupStandings   GroupStanding[]
 
   @@unique([nome, siglaEstado])
 }
@@ -146,6 +147,7 @@ model Group {
 
   groupParticipants GroupParticipant[]
   matches           Match[]
+  standings         GroupStanding[]
 
   @@unique([nome, eventSportId])
 }
@@ -179,4 +181,26 @@ model Match {
   eventSport EventSport @relation(fields: [eventSportId], references: [id], onDelete: Cascade)
   homeCity   City       @relation("homeMatches", fields: [homeCityId], references: [id], onDelete: Restrict)
   awayCity   City       @relation("awayMatches", fields: [awayCityId], references: [id], onDelete: Restrict)
+}
+
+model GroupStanding {
+  id             String   @id @default(uuid()) @db.Uuid
+  groupId        String   @db.Uuid
+  cityId         String   @db.Uuid
+  position       Int
+  played         Int      @default(0)
+  wins           Int      @default(0)
+  draws          Int      @default(0)
+  losses         Int      @default(0)
+  goalsFor       Int      @default(0)
+  goalsAgainst   Int      @default(0)
+  goalDifference Int      @default(0)
+  points         Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  group Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  city  City  @relation(fields: [cityId], references: [id], onDelete: Restrict)
+
+  @@unique([groupId, cityId])
 }

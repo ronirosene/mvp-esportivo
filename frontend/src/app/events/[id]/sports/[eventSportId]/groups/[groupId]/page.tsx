@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { matchesApi, type MatchData } from '@/services/matches';
+import { standingsApi, type StandingData } from '@/services/standings';
 import { useAuth } from '@/contexts/auth-context';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
@@ -19,6 +20,7 @@ export default function GroupMatchesPage() {
   const router = useRouter();
   const { token } = useAuth();
   const [matches, setMatches] = useState<MatchData[]>([]);
+  const [standings, setStandings] = useState<StandingData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -29,12 +31,26 @@ export default function GroupMatchesPage() {
       setMatches(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro ao carregar partidas');
-    } finally {
-      setLoading(false);
     }
   };
 
-  useEffect(() => { fetchMatches(); }, []);
+  const fetchStandings = async () => {
+    try {
+      const data = await standingsApi.get(params.groupId as string);
+      setStandings(data);
+    } catch {
+      setStandings([]);
+    }
+  };
+
+  useEffect(() => {
+    async function load() {
+      await fetchMatches();
+      await fetchStandings();
+      setLoading(false);
+    }
+    load();
+  }, []);
 
   async function handleGenerate() {
     try {
@@ -67,6 +83,7 @@ export default function GroupMatchesPage() {
       await matchesApi.update(match.id, data as any);
       setEditingId(null);
       fetchMatches();
+      fetchStandings();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro ao salvar partida');
     }
@@ -181,6 +198,60 @@ export default function GroupMatchesPage() {
                           )}
                         </>
                       )}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {standings.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Classificação</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b text-left text-muted-foreground">
+                    <th className="pb-2 font-medium w-10">Pos</th>
+                    <th className="pb-2 font-medium">Cidade</th>
+                    <th className="pb-2 font-medium w-8">J</th>
+                    <th className="pb-2 font-medium w-8">V</th>
+                    <th className="pb-2 font-medium w-8">E</th>
+                    <th className="pb-2 font-medium w-8">D</th>
+                    <th className="pb-2 font-medium w-8">GP</th>
+                    <th className="pb-2 font-medium w-8">GC</th>
+                    <th className="pb-2 font-medium w-8">SG</th>
+                    <th className="pb-2 font-medium w-10">PTS</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {standings.map((s) => (
+                    <tr key={s.id} className={`border-b last:border-0 ${s.position <= 2 ? 'font-semibold' : ''}`}>
+                      <td className="py-2">
+                        <span className={`inline-flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold ${
+                          s.position === 1
+                            ? 'bg-yellow-100 text-yellow-800'
+                            : s.position === 2
+                            ? 'bg-gray-100 text-gray-800'
+                            : 'bg-muted text-muted-foreground'
+                        }`}>
+                          {s.position}
+                        </span>
+                      </td>
+                      <td className="py-2">{s.city.nome}</td>
+                      <td className="py-2 text-center">{s.played}</td>
+                      <td className="py-2 text-center">{s.wins}</td>
+                      <td className="py-2 text-center">{s.draws}</td>
+                      <td className="py-2 text-center">{s.losses}</td>
+                      <td className="py-2 text-center">{s.goalsFor}</td>
+                      <td className="py-2 text-center">{s.goalsAgainst}</td>
+                      <td className="py-2 text-center">{s.goalDifference}</td>
+                      <td className="py-2 text-center font-bold">{s.points}</td>
                     </tr>
                   ))}
                 </tbody>
