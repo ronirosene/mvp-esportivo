@@ -32,6 +32,12 @@ enum Fase {
   TERCEIRO_LUGAR
 }
 
+enum InscricaoStatus {
+  INSCRITO
+  CONFIRMADO
+  DESISTENTE
+}
+
 model User {
   id        String   @id @default(uuid()) @db.Uuid
   nome      String
@@ -81,7 +87,22 @@ model EventSport {
   event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
   sport Sport @relation(fields: [sportId], references: [id], onDelete: Restrict)
 
+  eventSportCities EventSportCity[]
+
   @@unique([eventId, sportId])
+}
+
+model EventSportCity {
+  id           String          @id @default(uuid()) @db.Uuid
+  eventSportId String          @db.Uuid
+  cityId       String          @db.Uuid
+  status       InscricaoStatus @default(INSCRITO)
+  createdAt    DateTime        @default(now())
+
+  eventSport EventSport @relation(fields: [eventSportId], references: [id], onDelete: Cascade)
+  city       City       @relation(fields: [cityId], references: [id], onDelete: Restrict)
+
+  @@unique([eventSportId, cityId])
 }
 
 model City {
@@ -93,7 +114,8 @@ model City {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  teams Team[]
+  eventSportCities EventSportCity[]
+  teams            Team[]
 
   @@unique([nome, siglaEstado])
 }

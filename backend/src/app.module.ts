@@ -6,8 +6,9 @@ import { AuthModule } from './modules/auth/auth.module';
 import { EventsModule } from './modules/events/events.module';
 import { EventSportsModule } from './modules/event-sports/event-sports.module';
 import { CitiesModule } from './modules/cities/cities.module';
+import { EventSportCitiesModule } from './modules/event-sport-cities/event-sport-cities.module';
 
 @Module({
-  imports: [EnvConfigModule, PrismaModule, HealthModule, AuthModule, EventsModule, EventSportsModule, CitiesModule],
+  imports: [EnvConfigModule, PrismaModule, HealthModule, AuthModule, EventsModule, EventSportsModule, CitiesModule, EventSportCitiesModule],
 })
 export class AppModule {}
