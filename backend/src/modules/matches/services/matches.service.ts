@@ -1,7 +1,8 @@
 import { Injectable, NotFoundException, BadRequestException, ServiceUnavailableException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
-import { MatchStatus } from '@prisma/client';
+import { MatchStatus, Fase } from '@prisma/client';
 import { UpdateMatchDto } from '../dto/update-match.dto';
+import { CreateManualMatchDto } from '../dto/create-manual-match.dto';
 
 @Injectable()
 export class MatchesService {
@@ -24,7 +25,50 @@ export class MatchesService {
         homeCity: true,
         awayCity: true,
       },
-      orderBy: { createdAt: 'asc' },
+      orderBy: [{ round: 'asc' }, { displayOrder: 'asc' }, { createdAt: 'asc' }],
+    });
+  }
+
+  async createManual(groupId: string, dto: CreateManualMatchDto) {
+    this.checkDb();
+    const group = await this.prisma.group.findUnique({ where: { id: groupId } });
+    if (!group) throw new NotFoundException('Grupo não encontrado');
+
+    if (dto.homeCityId === dto.awayCityId) {
+      throw new BadRequestException('Confronto inválido: mesma cidade.');
+    }
+
+    const duplicate = await this.prisma.match.findFirst({
+      where: {
+        groupId,
+        homeCityId: dto.homeCityId,
+        awayCityId: dto.awayCityId,
+      },
+    });
+    if (duplicate) throw new BadRequestException('Partida duplicada neste grupo.');
+
+    const reverse = await this.prisma.match.findFirst({
+      where: {
+        groupId,
+        homeCityId: dto.awayCityId,
+        awayCityId: dto.homeCityId,
+      },
+    });
+    if (reverse) throw new BadRequestException('Confronto inverso já existe neste grupo.');
+
+    return this.prisma.match.create({
+      data: {
+        groupId,
+        eventSportId: group.eventSportId,
+        homeCityId: dto.homeCityId,
+        awayCityId: dto.awayCityId,
+        matchDate: dto.matchDate ? new Date(dto.matchDate) : null,
+        location: dto.location ?? null,
+        round: dto.round ?? null,
+        displayOrder: dto.displayOrder ?? null,
+        fase: (dto.fase as Fase) ?? 'GRUPOS',
+      },
+      include: { homeCity: true, awayCity: true },
     });
   }
 
@@ -95,6 +139,8 @@ export class MatchesService {
     if (dto.awayScore !== undefined) data.awayScore = dto.awayScore;
     if (dto.matchDate !== undefined) data.matchDate = new Date(dto.matchDate);
     if (dto.location !== undefined) data.location = dto.location;
+    if (dto.round !== undefined) data.round = dto.round;
+    if (dto.displayOrder !== undefined) data.displayOrder = dto.displayOrder;
     if (dto.status !== undefined) data.status = dto.status;
 
     return this.prisma.match.update({

@@ -4,8 +4,8 @@ import { useEffect, useState, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { eventsApi, type EventData } from '@/services/events';
 import { eventSportsApi, type EventSportData } from '@/services/event-sports';
-import { eventSportCitiesApi, type EventSportCityData } from '@/services/event-sport-cities';
 import { eventSportGroupsApi, type GroupData } from '@/services/event-sport-groups';
+import { eventSportCitiesApi, type EventSportCityData } from '@/services/event-sport-cities';
 import { playoffsApi } from '@/services/playoffs';
 import type { MatchData } from '@/services/matches';
 import { useAuth } from '@/contexts/auth-context';
@@ -124,6 +124,17 @@ const [playoffs, setPlayoffs] = useState<Record<string, MatchData[]>>({});
     }
   }
 
+  async function handleCreateGroup(eventSportId: string) {
+    const nome = prompt('Nome do grupo (ex: Grupo A):');
+    if (!nome) return;
+    try {
+      await eventSportGroupsApi.create(eventSportId, nome);
+      fetchGroups(sports);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erro ao criar grupo');
+    }
+  }
+
   async function handleGenerateGroups(eventSportId: string) {
     const groupCountStr = prompt('Quantidade de grupos?');
     if (!groupCountStr) return;
@@ -182,6 +193,18 @@ const [playoffs, setPlayoffs] = useState<Record<string, MatchData[]>>({});
       fetchPlayoffs(sports);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro ao avançar fase');
+    }
+  }
+
+  async function handleToggleDrawMode(eventSportId: string) {
+    const es = sports.find((s) => s.id === eventSportId);
+    if (!es) return;
+    const newMode = es.drawMode === 'MANUAL' ? 'AUTOMATIC' : 'MANUAL';
+    try {
+      await eventSportsApi.update(params.id as string, eventSportId, { drawMode: newMode as any });
+      fetchSports();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erro ao alterar modo');
     }
   }
 
@@ -271,11 +294,19 @@ const [playoffs, setPlayoffs] = useState<Record<string, MatchData[]>>({});
                       <div>
                         <span className="text-sm font-medium">{es.sport.nome}</span>
                         <span className="ml-2 text-xs text-muted-foreground">{es.sport.categoria}</span>
+                        <span className={`ml-2 inline-block rounded-full px-2 py-0.5 text-xs font-semibold ${es.drawMode === 'MANUAL' ? 'bg-amber-100 text-amber-800' : 'bg-green-100 text-green-800'}`}>
+                          {es.drawMode === 'MANUAL' ? 'MANUAL' : 'AUTOMÁTICO'}
+                        </span>
                       </div>
                       {token && (
-                        <Button variant="ghost" size="sm" className="text-destructive" onClick={() => handleRemoveSport(es.sport.id)}>
-                          Remover
-                        </Button>
+                        <div className="flex gap-1">
+                          <Button variant="outline" size="sm" className="text-xs h-7" onClick={() => handleToggleDrawMode(es.id)}>
+                            Modo {es.drawMode === 'MANUAL' ? 'Automático' : 'Manual'}
+                          </Button>
+                          <Button variant="ghost" size="sm" className="text-destructive" onClick={() => handleRemoveSport(es.sport.id)}>
+                            Remover
+                          </Button>
+                        </div>
                       )}
                     </div>
                     {parts.length === 0 ? (
@@ -311,15 +342,23 @@ const [playoffs, setPlayoffs] = useState<Record<string, MatchData[]>>({});
                       )}
                       <h4 className="text-xs font-semibold uppercase text-muted-foreground mb-2">Grupos</h4>
                       {token && (
-                        <div className="flex gap-2 mb-2">
-                          <Button variant="outline" size="sm" onClick={() => handleGenerateGroups(es.id)}>
-                            Gerar Grupos
-                          </Button>
+                        <div className="flex gap-2 mb-2 flex-wrap">
+                          {es.drawMode === 'MANUAL' ? (
+                            <Button variant="outline" size="sm" onClick={() => handleCreateGroup(es.id)}>
+                              Criar Grupo
+                            </Button>
+                          ) : (
+                            <Button variant="outline" size="sm" onClick={() => handleGenerateGroups(es.id)}>
+                              Gerar Grupos
+                            </Button>
+                          )}
                           {(groups[es.id]?.length ?? 0) > 0 && (
                             <>
-                              <Button variant="outline" size="sm" onClick={() => handleRegenerateGroups(es.id)}>
-                                Regerar Grupos
-                              </Button>
+                              {es.drawMode !== 'MANUAL' && (
+                                <Button variant="outline" size="sm" onClick={() => handleRegenerateGroups(es.id)}>
+                                  Regerar Grupos
+                                </Button>
+                              )}
                               <Button variant="ghost" size="sm" className="text-destructive" onClick={() => handleRemoveGroups(es.id)}>
                                 Excluir Grupos
                               </Button>

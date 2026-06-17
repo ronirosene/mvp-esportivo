@@ -32,6 +32,47 @@ export class GroupsService {
     });
   }
 
+  async create(eventSportId: string, nome: string) {
+    this.checkDb();
+    const eventSport = await this.prisma.eventSport.findUnique({ where: { id: eventSportId } });
+    if (!eventSport) throw new NotFoundException('Vínculo modalidade-evento não encontrado');
+
+    const existing = await this.prisma.group.findUnique({
+      where: { nome_eventSportId: { nome, eventSportId } },
+    });
+    if (existing) throw new BadRequestException('Já existe um grupo com este nome nesta modalidade.');
+
+    return this.prisma.group.create({
+      data: { nome, eventSportId },
+    });
+  }
+
+  async addParticipant(groupId: string, eventSportCityId: string) {
+    this.checkDb();
+    const group = await this.prisma.group.findUnique({ where: { id: groupId } });
+    if (!group) throw new NotFoundException('Grupo não encontrado');
+
+    const esc = await this.prisma.eventSportCity.findUnique({ where: { id: eventSportCityId } });
+    if (!esc) throw new NotFoundException('Inscrição de cidade não encontrada');
+
+    const existing = await this.prisma.groupParticipant.findUnique({
+      where: { eventSportCityId },
+    });
+    if (existing) throw new BadRequestException('Cidade já está em um grupo nesta modalidade.');
+
+    return this.prisma.groupParticipant.create({
+      data: { groupId, eventSportCityId },
+      include: { eventSportCity: { include: { city: true } } },
+    });
+  }
+
+  async removeParticipant(participantId: string) {
+    this.checkDb();
+    const gp = await this.prisma.groupParticipant.findUnique({ where: { id: participantId } });
+    if (!gp) throw new NotFoundException('Participante não encontrado no grupo');
+    return this.prisma.groupParticipant.delete({ where: { id: participantId } });
+  }
+
   async generate(eventSportId: string, groupCount: number) {
     this.checkDb();
     const eventSport = await this.prisma.eventSport.findUnique({ where: { id: eventSportId } });

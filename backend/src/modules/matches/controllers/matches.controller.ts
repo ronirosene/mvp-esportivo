@@ -2,6 +2,7 @@ import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards } from '@nes
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { MatchesService } from '../services/matches.service';
 import { UpdateMatchDto } from '../dto/update-match.dto';
+import { CreateManualMatchDto } from '../dto/create-manual-match.dto';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { StandingsService } from '../../standings/services/standings.service';
 
@@ -17,6 +18,14 @@ export class MatchesController {
   @ApiOperation({ summary: 'Listar partidas de um grupo' })
   findByGroup(@Param('groupId') groupId: string) {
     return this.matchesService.findByGroup(groupId);
+  }
+
+  @Post('groups/:groupId/matches')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Criar partida manualmente' })
+  createManual(@Param('groupId') groupId: string, @Body() dto: CreateManualMatchDto) {
+    return this.matchesService.createManual(groupId, dto);
   }
 
   @Post('groups/:groupId/matches/generate')

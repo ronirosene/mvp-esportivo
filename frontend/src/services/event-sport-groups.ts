@@ -33,6 +33,12 @@ export const eventSportGroupsApi = {
       body: JSON.stringify({ groupCount }),
     }),
 
+  create: (eventSportId: string, nome: string) =>
+    api<GroupData>(`/event-sports/${eventSportId}/groups`, {
+      method: 'POST',
+      body: JSON.stringify({ nome }),
+    }),
+
   remove: (eventSportId: string) =>
     api<{ message: string }>(`/event-sports/${eventSportId}/groups`, { method: 'DELETE' }),
 };

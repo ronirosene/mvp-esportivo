@@ -8,7 +8,7 @@ interface CityData {
 
 export interface MatchData {
   id: string;
-  groupId: string;
+  groupId: string | null;
   eventSportId: string;
   homeCityId: string;
   awayCityId: string;
@@ -18,6 +18,8 @@ export interface MatchData {
   awayScore: number | null;
   status: string;
   fase: string;
+  round: number | null;
+  displayOrder: number | null;
   createdAt: string;
   updatedAt: string;
   homeCity: CityData;
@@ -27,6 +29,19 @@ export interface MatchData {
 export const matchesApi = {
   listByGroup: (groupId: string) =>
     api<MatchData[]>(`/groups/${groupId}/matches`),
+
+  createManual: (groupId: string, data: {
+    homeCityId: string;
+    awayCityId: string;
+    matchDate?: string;
+    location?: string;
+    round?: number;
+    displayOrder?: number;
+    fase?: string;
+  }) => api<MatchData>(`/groups/${groupId}/matches`, {
+    method: 'POST',
+    body: JSON.stringify(data),
+  }),
 
   generate: (groupId: string) =>
     api<MatchData[]>(`/groups/${groupId}/matches/generate`, { method: 'POST' }),

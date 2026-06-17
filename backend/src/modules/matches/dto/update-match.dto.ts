@@ -29,4 +29,16 @@ export class UpdateMatchDto {
   @IsOptional()
   @IsEnum(MatchStatus)
   status?: MatchStatus;
+
+  @ApiPropertyOptional({ description: 'Rodada' })
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  round?: number;
+
+  @ApiPropertyOptional({ description: 'Ordem de exibição' })
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  displayOrder?: number;
 }
