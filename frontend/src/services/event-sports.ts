@@ -3,7 +3,6 @@ import { api } from './api';
 export interface SportData {
   id: string;
   nome: string;
-  categoria: string;
   ativo: boolean;
   createdAt: string;
   updatedAt: string;

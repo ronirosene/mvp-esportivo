@@ -1,3 +1,7 @@
+// Executado com sucesso na migration 0013 (18/06/2026)
+// Parseia categoria -> gender + ageCategory, deduplica Sports por nome
+// Agora arquivado -- Sport.categoria foi removido na migration 0014
+
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 

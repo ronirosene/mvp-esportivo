@@ -33,11 +33,14 @@
 ┌──────────────────────────────────┐
 │          EventSport              │
 ├──────────────────────────────────┤
-│  id         UUID  PK             │
-│  eventId    UUID  FK             │
-│  sportId    UUID  FK             │
-│  createdAt  DateTime             │
-│  UK(eventId, sportId)            │
+│  id           UUID  PK           │
+│  eventId      UUID  FK           │
+│  sportId      UUID  FK           │
+│  gender       Gender             │
+│  ageCategory  AgeCategory        │
+│  displayName  String             │
+│  createdAt    DateTime           │
+│  UK(eventId, sportId, gender, ageCategory)│
 └──────┬───────────────────────────┘
        │ 1
        ├──────────────────┬──────────────────┐
@@ -69,11 +72,11 @@
 │    City      │   │     Sport        │
 ├──────────────┤   ├──────────────────┤
 │ id      PK   │   │ id        PK     │
-│ nome         │   │ nome             │
-│ estado       │   │ categoria        │
+│ nome         │   │ nome       UK    │
+│ estado       │   │ ativo            │
 │ siglaEstado  │   │ createdAt        │
-│ brasaoUrl ?  │   └──────────────────┘
-│ createdAt    │
+│ brasaoUrl ?  │   │ updatedAt        │
+│ createdAt    │   └──────────────────┘
 │ updatedAt    │
 │ UK(nome,UF)  │
 └──────────────┘
@@ -115,7 +118,7 @@
 5. Partidas são geradas como confrontos únicos dentro do grupo (round-robin)
 6. Uma partida finalizada exige placar (homeScore e awayScore)
 7. Ao deletar um **evento**, todos os registros vinculados são removidos (CASCADE)
-8. **Enums**: `Role`, `EventStatus`, `InscricaoStatus`, `MatchStatus`, `Fase`
+8. **Enums**: `Role`, `EventStatus`, `InscricaoStatus`, `MatchStatus`, `Fase`, `Gender`, `AgeCategory`
 
 ## Fases (enum Fase)
 

@@ -37,8 +37,8 @@ Monorepo (backend/ + frontend/) — sistema de gestão de eventos esportivos com
 ### Schema (12+ models, 10 enums)
 - **User** — ADMIN/ORGANIZADOR, JWT auth
 - **Event** — nome, ano, cidadeSede, dataInicio/Fim, status
-- **Sport** — nome, categoria
-- **EventSport** — junction Event<->Sport with unique constraint, drawMode (AUTOMATICO/MANUAL)
+- **Sport** — nome (unique), ativo
+- **EventSport** — junction Event<->Sport with gender + ageCategory + displayName, unique [eventId, sportId, gender, ageCategory], drawMode (AUTOMATICO/MANUAL)
 - **EventSportCity** — city enrollment in a sport modality with InscricaoStatus
 - **City** — nome, estado, siglaEstado (unique [nome, siglaEstado])
 - **CompetitionFormat** — 1:1 with EventSport, FormatType (GROUP_STAGE/ROUND_ROBIN/KNOCKOUT/MANUAL)

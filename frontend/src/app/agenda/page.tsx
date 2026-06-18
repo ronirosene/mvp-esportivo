@@ -17,7 +17,7 @@ interface MatchData {
   status: string;
   fase: string;
   eventSport: {
-    sport: { nome: string; categoria: string };
+    sport: { nome: string };
     event: { nome: string };
   };
 }
