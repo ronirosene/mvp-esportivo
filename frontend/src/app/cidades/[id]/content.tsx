@@ -48,9 +48,14 @@ export default function CityDetailContent() {
 
   return (
     <div className="space-y-6">
-      <button className="text-sm text-muted-foreground hover:text-foreground" onClick={() => router.push('/cidades')}>
-        &larr; Todas as Cidades
-      </button>
+      <div className="flex items-center justify-between">
+        <button className="text-sm text-muted-foreground hover:text-foreground" onClick={() => router.push('/cidades')}>
+          &larr; Todas as Cidades
+        </button>
+        <button className="text-sm font-medium text-primary hover:underline" onClick={() => router.push(`/ranking`)}>
+          Ver posição no ranking
+        </button>
+      </div>
 
       <div className="rounded-lg border p-6">
         <h1 className="text-2xl font-bold tracking-tight">{city.nome} - {city.siglaEstado}</h1>

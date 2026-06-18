@@ -15,8 +15,9 @@ import { CompetitionFormatsModule } from './modules/competition-formats/competit
 import { PublicScheduleModule } from './modules/public-schedule/public-schedule.module';
 import { ChampionsModule } from './modules/champions/champions.module';
 import { CityHistoryModule } from './modules/city-history/city-history.module';
+import { RankingModule } from './modules/ranking/ranking.module';
 
 @Module({
-  imports: [EnvConfigModule, PrismaModule, HealthModule, AuthModule, EventsModule, EventSportsModule, CitiesModule, EventSportCitiesModule, GroupsModule, MatchesModule, StandingsModule, PlayoffsModule, CompetitionFormatsModule, PublicScheduleModule, ChampionsModule, CityHistoryModule],
+  imports: [EnvConfigModule, PrismaModule, HealthModule, AuthModule, EventsModule, EventSportsModule, CitiesModule, EventSportCitiesModule, GroupsModule, MatchesModule, StandingsModule, PlayoffsModule, CompetitionFormatsModule, PublicScheduleModule, ChampionsModule, CityHistoryModule, RankingModule],
 })
 export class AppModule {}

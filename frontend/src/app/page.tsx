@@ -6,6 +6,7 @@ import { eventsApi, type EventData } from '@/services/events';
 import { eventSportsApi } from '@/services/event-sports';
 import { eventSportCitiesApi } from '@/services/event-sport-cities';
 import { api } from '@/services/api';
+import { rankingApi, type RankingEntry } from '@/services/ranking';
 
 const STATUS_LABEL: Record<string, string> = {
   PLANEJAMENTO: 'Planejamento',
@@ -25,6 +26,7 @@ export default function PublicHome() {
   const [counts, setCounts] = useState<Record<string, { sports: number; cities: number }>>({});
   const [loading, setLoading] = useState(true);
   const [todayMatches, setTodayMatches] = useState<any[]>([]);
+  const [topRanking, setTopRanking] = useState<RankingEntry[]>([]);
 
   useEffect(() => {
     async function load() {
@@ -48,6 +50,10 @@ export default function PublicHome() {
           const td = await api<any[]>('/public/schedule/today');
           setTodayMatches(td);
         } catch {}
+        try {
+          const r = await rankingApi.get();
+          setTopRanking(r.slice(0, 5));
+        } catch {}
       } catch {} finally { setLoading(false); }
     }
     load();
@@ -66,34 +72,67 @@ export default function PublicHome() {
         <p className="mt-2 text-muted-foreground">Acompanhe resultados, classificação e jogos ao vivo.</p>
       </section>
 
-      {todayMatches.length > 0 && (
-        <section>
-          <div className="mb-3 flex items-center justify-between">
-            <h2 className="text-lg font-semibold">Jogos de Hoje</h2>
-            <button
-              className="text-xs font-medium text-muted-foreground hover:text-foreground"
-              onClick={() => router.push('/agenda')}
-            >
-              Ver Agenda Completa
-            </button>
-          </div>
-          <div className="space-y-2">
-            {todayMatches.slice(0, 4).map((m: any) => (
-              <div key={m.id} className="flex items-center justify-between rounded-lg border px-4 py-3 text-sm transition-colors hover:bg-muted/30">
-                <div className="flex items-center gap-3">
-                  <span className="font-semibold tabular-nums text-muted-foreground">
-                    {m.matchDate ? new Date(m.matchDate).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : ''}
-                  </span>
-                  <span>{m.homeCity.nome}</span>
-                  <span className="text-xs text-muted-foreground">vs</span>
-                  <span>{m.awayCity.nome}</span>
+      <div className="grid gap-6 sm:grid-cols-2">
+        {todayMatches.length > 0 && (
+          <section>
+            <div className="mb-3 flex items-center justify-between">
+              <h2 className="text-lg font-semibold">Jogos de Hoje</h2>
+              <button
+                className="text-xs font-medium text-muted-foreground hover:text-foreground"
+                onClick={() => router.push('/agenda')}
+              >
+                Ver Agenda Completa
+              </button>
+            </div>
+            <div className="space-y-2">
+              {todayMatches.slice(0, 4).map((m: any) => (
+                <div key={m.id} className="flex items-center justify-between rounded-lg border px-4 py-3 text-sm transition-colors hover:bg-muted/30">
+                  <div className="flex items-center gap-3">
+                    <span className="font-semibold tabular-nums text-muted-foreground">
+                      {m.matchDate ? new Date(m.matchDate).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : ''}
+                    </span>
+                    <span>{m.homeCity.nome}</span>
+                    <span className="text-xs text-muted-foreground">vs</span>
+                    <span>{m.awayCity.nome}</span>
+                  </div>
+                  <span className="text-xs text-muted-foreground">{m.eventSport?.sport?.nome}</span>
                 </div>
-                <span className="text-xs text-muted-foreground">{m.eventSport?.sport?.nome}</span>
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
+              ))}
+            </div>
+          </section>
+        )}
+
+        {topRanking.length > 0 && (
+          <section>
+            <div className="mb-3 flex items-center justify-between">
+              <h2 className="text-lg font-semibold">Ranking Histórico</h2>
+              <button
+                className="text-xs font-medium text-muted-foreground hover:text-foreground"
+                onClick={() => router.push('/ranking')}
+              >
+                Ver Ranking Completo
+              </button>
+            </div>
+            <div className="space-y-1.5">
+              {topRanking.map((entry, i) => (
+                <div
+                  key={entry.cityId}
+                  className="flex cursor-pointer items-center justify-between rounded-lg border px-4 py-2.5 text-sm transition-colors hover:bg-muted/30"
+                  onClick={() => router.push(`/cidades/${entry.cityId}`)}
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="w-5 text-center font-bold">
+                      {i === 0 ? '\u{1F947}' : i === 1 ? '\u{1F948}' : i === 2 ? '\u{1F949}' : entry.position}
+                    </span>
+                    <span className="font-medium">{entry.cityName} <span className="text-xs text-muted-foreground">{entry.siglaEstado}</span></span>
+                  </div>
+                  <span className="font-bold tabular-nums">{entry.score}</span>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+      </div>
 
       {loading ? (
         <p className="text-center text-muted-foreground">Carregando eventos...</p>

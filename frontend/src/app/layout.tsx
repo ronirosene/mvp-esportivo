@@ -8,7 +8,7 @@ import './globals.css';
 
 const inter = Inter({ subsets: ['latin'] });
 
-const PUBLIC_ROUTES = ['/', '/eventos', '/agenda', '/historico', '/cidades'];
+const PUBLIC_ROUTES = ['/', '/eventos', '/agenda', '/historico', '/cidades', '/ranking'];
 
 function isPublicRoute(pathname: string): boolean {
   if (pathname === '/') return true;
@@ -16,6 +16,7 @@ function isPublicRoute(pathname: string): boolean {
   if (pathname.startsWith('/agenda')) return true;
   if (pathname.startsWith('/historico')) return true;
   if (pathname.startsWith('/cidades')) return true;
+  if (pathname.startsWith('/ranking')) return true;
   if (pathname.startsWith('/login')) return true;
   return false;
 }
@@ -59,6 +60,12 @@ function PublicHeader() {
               onClick={() => router.push('/cidades')}
             >
               Cidades
+            </span>
+            <span
+              className={`cursor-pointer text-sm ${pathname.startsWith('/ranking') ? 'font-medium text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+              onClick={() => router.push('/ranking')}
+            >
+              Ranking
             </span>
           </nav>
         </div>

@@ -80,6 +80,8 @@ Monorepo (backend/ + frontend/) — sistema de gestão de eventos esportivos com
 - **MVP 14** — Chaveamento Visual (Bracket): GET /event-sports/:id/playoffs/bracket, BracketView component com SVG lines, modal match details, /mata-mata page
 - **MVP 14.1** — Agenda Oficial: backend module public-schedule (today/upcoming/results/filter), /agenda page with tabs, ScheduleCard/ScheduleFilters, Jogos de Hoje na home
 - **MVP 16** — Histórico de Campeões: Champion model, auto-registro ao encerrar FINAL/TERCEIRO_LUGAR, /historico público com filtros, aba Histórico na página da modalidade
+- **MVP 17** — Página da Cidade e Estatísticas Históricas: city-history module (4 endpoints públicos), /cidades list+detail pages, links clicáveis em toda aplicação, SEO dinâmico
+- **MVP 18** — Ranking Histórico das Cidades: ranking module (GET /public/ranking com filtros), /ranking page com tabela + destaques visuais + critério de pontuação 5/3/1, link na página da cidade, Top 5 na home
 
 ### In Progress
 - (none)
@@ -112,18 +114,21 @@ Monorepo (backend/ + frontend/) — sistema de gestão de eventos esportivos com
 - `backend/src/modules/playoffs/` — Playoffs generation + advancement + bracket endpoint
 - `backend/src/modules/competition-formats/` — Format config (GROUP_STAGE, etc.)
 - `backend/src/modules/public-schedule/` — Public schedule (today/upcoming/results/filter)
+- `backend/src/modules/city-history/` — Public city history/stats endpoints
+- `backend/src/modules/ranking/` — Public ranking endpoint
 - `backend/src/modules/auth/` — JWT auth
 - `backend/Dockerfile` — Multi-stage with node:20-slim
 - `backend/fly.toml` — Fly.io config (app mvp-backend-little-woodland-6494, region gru)
 
 ## Relevant Frontend Files
-- `frontend/src/app/layout.tsx` — Root layout with conditional public/admin rendering
+- `frontend/src/app/layout.tsx` — Root layout with conditional public/admin rendering, "Ranking" link in nav
 - `frontend/src/app/page.tsx` — Landing page publica com eventos + Jogos de Hoje
 - `frontend/src/app/eventos/` — Rotas publicas (/eventos, /eventos/[id], /eventos/[id]/modalidades/[id], /mata-mata)
 - `frontend/src/app/agenda/` — Pagina publica de agenda com abas e filtros
 - `frontend/src/app/events/[id]/page.tsx` — Admin: event detail with sports/participants/groups/playoffs
 - `frontend/src/app/cities/` — Admin: Cities CRUD pages
 - `frontend/src/components/bracket-view.tsx` — Visual bracket component with SVG connectors
+- `frontend/src/app/cidades/` — Public city list + detail pages with history/stats
 - `frontend/src/components/schedule-card.tsx` — Match card for schedule
 - `frontend/src/components/schedule-filters.tsx` — Filters for schedule
 - `frontend/src/services/` — API services
