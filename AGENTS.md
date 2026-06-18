@@ -34,7 +34,7 @@ Monorepo (backend/ + frontend/) — sistema de gestão de eventos esportivos com
 - `.env` is gitignored. Never commit it.
 
 ## Architecture
-### Schema (12+ models, 8 enums)
+### Schema (12+ models, 10 enums)
 - **User** — ADMIN/ORGANIZADOR, JWT auth
 - **Event** — nome, ano, cidadeSede, dataInicio/Fim, status
 - **Sport** — nome, categoria
@@ -56,6 +56,8 @@ Monorepo (backend/ + frontend/) — sistema de gestão de eventos esportivos com
 - `Fase`: GRUPOS, QUARTAS, SEMIFINAL, FINAL, TERCEIRO_LUGAR
 - `DrawMode`: AUTOMATICO, MANUAL
 - `FormatType`: GROUP_STAGE, ROUND_ROBIN, KNOCKOUT, MANUAL
+- `Gender`: MASCULINO, FEMININO, MISTO, OPEN
+- `AgeCategory`: LIVRE, SUB_14, SUB_16, SUB_18, SUB_20, VETERANO, MASTER
 
 ## MVP Progress
 ### Done
