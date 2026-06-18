@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { championsApi, type ChampionData } from '@/services/champions';
 import { api } from '@/services/api';
 
@@ -22,6 +23,7 @@ interface FilterOption {
 }
 
 export default function HistoricoContent() {
+  const router = useRouter();
   const [champions, setChampions] = useState<ChampionData[]>([]);
   const [filtered, setFiltered] = useState<ChampionData[]>([]);
   const [loading, setLoading] = useState(true);
@@ -115,7 +117,7 @@ export default function HistoricoContent() {
                   <div className="flex-1">
                     <p className="text-sm font-semibold">{ch.eventSport.displayName}</p>
                     <p className="text-xs text-muted-foreground">
-                      {POSITION_LABEL[ch.position]}: {ch.city.nome} - {ch.city.siglaEstado}
+                      {POSITION_LABEL[ch.position]}: <span className="cursor-pointer hover:underline" onClick={() => router.push(`/cidades/${ch.city.id}`)}>{ch.city.nome} - {ch.city.siglaEstado}</span>
                     </p>
                   </div>
                 </div>

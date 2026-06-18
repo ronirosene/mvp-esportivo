@@ -142,7 +142,7 @@ export default function ModalidadePublicDetail() {
                   <div key={pos} className="flex items-center gap-3 rounded-lg border p-4">
                     <span className="text-2xl">{POSITION_EMOJI[pos]}</span>
                     <div>
-                      <p className="text-sm font-semibold">{c.city.nome} - {c.city.siglaEstado}</p>
+                      <p className="cursor-pointer text-sm font-semibold hover:underline" onClick={() => router.push(`/cidades/${c.city.id}`)}>{c.city.nome} - {c.city.siglaEstado}</p>
                       <p className="text-xs text-muted-foreground">
                         {POSITION_LABEL[pos]} ({c.event.ano})
                       </p>
@@ -172,7 +172,7 @@ export default function ModalidadePublicDetail() {
                       <div key={s.id} className="flex items-center justify-between px-3 py-1.5">
                         <span className="flex items-center gap-2">
                           <span className="w-5 text-center text-xs text-muted-foreground">{s.position}º</span>
-                          <span>{s.city.nome}</span>
+                          <span className="cursor-pointer hover:underline" onClick={() => router.push(`/cidades/${s.city.id}`)}>{s.city.nome}</span>
                         </span>
                         <span className="text-xs text-muted-foreground">
                           {s.points} pts | {s.played}J {s.wins}V {s.draws}E {s.losses}D | {s.goalsFor}:{s.goalsAgainst}
@@ -207,9 +207,9 @@ export default function ModalidadePublicDetail() {
                 <div className="space-y-1.5">
                   {ms.map((m) => (
                     <div key={m.id} className="flex flex-wrap items-center justify-between gap-2 rounded-md border bg-muted/20 px-3 py-2 text-sm">
-                      <span className="font-medium">{m.homeCity.nome} ({m.homeCity.siglaEstado})</span>
+                      <span className="cursor-pointer font-medium hover:underline" onClick={() => router.push(`/cidades/${m.homeCity.id}`)}>{m.homeCity.nome} ({m.homeCity.siglaEstado})</span>
                       <span className="font-semibold tabular-nums">{m.homeScore ?? '?'} x {m.awayScore ?? '?'}</span>
-                      <span className="font-medium">{m.awayCity.nome} ({m.awayCity.siglaEstado})</span>
+                      <span className="cursor-pointer font-medium hover:underline" onClick={() => router.push(`/cidades/${m.awayCity.id}`)}>{m.awayCity.nome} ({m.awayCity.siglaEstado})</span>
                     </div>
                   ))}
                 </div>
@@ -233,9 +233,9 @@ export default function ModalidadePublicDetail() {
                 <div className="space-y-1">
                   {upcoming.map((m) => (
                     <div key={m.id} className="flex items-center justify-between rounded-md border px-3 py-1.5 text-sm">
-                      <span>{m.homeCity.nome} ({m.homeCity.siglaEstado})</span>
+                      <span className="cursor-pointer hover:underline" onClick={() => router.push(`/cidades/${m.homeCity.id}`)}>{m.homeCity.nome} ({m.homeCity.siglaEstado})</span>
                       <span className="text-xs text-muted-foreground">vs</span>
-                      <span>{m.awayCity.nome} ({m.awayCity.siglaEstado})</span>
+                      <span className="cursor-pointer hover:underline" onClick={() => router.push(`/cidades/${m.awayCity.id}`)}>{m.awayCity.nome} ({m.awayCity.siglaEstado})</span>
                       {m.matchDate && <span className="text-xs text-muted-foreground">{new Date(m.matchDate).toLocaleString('pt-BR')}</span>}
                       {m.location && <span className="text-xs text-muted-foreground">{m.location}</span>}
                     </div>
@@ -249,9 +249,9 @@ export default function ModalidadePublicDetail() {
                 <div className="space-y-1">
                   {finished.map((m) => (
                     <div key={m.id} className="flex items-center justify-between rounded-md border px-3 py-1.5 text-sm">
-                      <span>{m.homeCity.nome}</span>
+                      <span className="cursor-pointer hover:underline" onClick={() => router.push(`/cidades/${m.homeCity.id}`)}>{m.homeCity.nome}</span>
                       <span className="font-semibold">{m.homeScore} x {m.awayScore}</span>
-                      <span>{m.awayCity.nome}</span>
+                      <span className="cursor-pointer hover:underline" onClick={() => router.push(`/cidades/${m.awayCity.id}`)}>{m.awayCity.nome}</span>
                     </div>
                   ))}
                 </div>

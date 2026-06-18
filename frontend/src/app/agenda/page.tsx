@@ -8,8 +8,8 @@ import ScheduleFilters from '@/components/schedule-filters';
 
 interface MatchData {
   id: string;
-  homeCity: { nome: string; siglaEstado: string };
-  awayCity: { nome: string; siglaEstado: string };
+  homeCity: { id: string; nome: string; siglaEstado: string };
+  awayCity: { id: string; nome: string; siglaEstado: string };
   homeScore: number | null;
   awayScore: number | null;
   matchDate: string | null;

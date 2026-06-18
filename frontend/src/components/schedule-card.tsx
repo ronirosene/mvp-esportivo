@@ -1,9 +1,11 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
+
 interface ScheduleMatch {
   id: string;
-  homeCity: { nome: string; siglaEstado: string };
-  awayCity: { nome: string; siglaEstado: string };
+  homeCity: { id: string; nome: string; siglaEstado: string };
+  awayCity: { id: string; nome: string; siglaEstado: string };
   homeScore: number | null;
   awayScore: number | null;
   matchDate: string | null;
@@ -29,6 +31,7 @@ function isWithinHour(dateStr: string): boolean {
 }
 
 export default function ScheduleCard({ match }: ScheduleCardProps) {
+  const router = useRouter();
   const isLive = match.status === 'IN_PROGRESS';
   const isDone = match.status === 'FINISHED';
   const isSoon = match.matchDate ? isWithinHour(match.matchDate) : false;
@@ -62,7 +65,7 @@ export default function ScheduleCard({ match }: ScheduleCardProps) {
       <div className="flex items-center justify-between gap-3">
         <div className="flex-1 text-right">
           <p className={`text-sm font-medium ${isDone && match.homeScore != null && match.awayScore != null && match.homeScore > match.awayScore ? 'font-bold text-foreground' : ''}`}>
-            {match.homeCity.nome}
+            <span className="cursor-pointer hover:underline" onClick={() => router.push(`/cidades/${match.homeCity.id}`)}>{match.homeCity.nome}</span>
           </p>
           <p className="text-[10px] text-muted-foreground">{match.homeCity.siglaEstado}</p>
         </div>
@@ -77,7 +80,7 @@ export default function ScheduleCard({ match }: ScheduleCardProps) {
 
         <div className="flex-1 text-left">
           <p className={`text-sm font-medium ${isDone && match.homeScore != null && match.awayScore != null && match.awayScore > match.homeScore ? 'font-bold text-foreground' : ''}`}>
-            {match.awayCity.nome}
+            <span className="cursor-pointer hover:underline" onClick={() => router.push(`/cidades/${match.awayCity.id}`)}>{match.awayCity.nome}</span>
           </p>
           <p className="text-[10px] text-muted-foreground">{match.awayCity.siglaEstado}</p>
         </div>
