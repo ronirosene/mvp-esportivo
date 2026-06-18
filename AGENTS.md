@@ -46,6 +46,7 @@ Monorepo (backend/ + frontend/) — sistema de gestão de eventos esportivos com
 - **GroupParticipant** — links Group to EventSportCity (unique per city)
 - **GroupStanding** — classification per group
 - **Match** — linked to Group + EventSport + City (home/away), scores, status SCHEDULED/IN_PROGRESS/FINISHED/CANCELLED/AWAITING_PREVIOUS_MATCH
+- **Champion** — city champion history per eventSport, unique [eventSportId, position], auto-registered when FINAL/TERCEIRO_LUGAR finished
 - **Team** — legacy
 
 ### Enums
@@ -78,6 +79,7 @@ Monorepo (backend/ + frontend/) — sistema de gestão de eventos esportivos com
 - **MVP 13** — Portal Publico: layout condicional, landing page, eventos/evento/modalidade publicas, SEO
 - **MVP 14** — Chaveamento Visual (Bracket): GET /event-sports/:id/playoffs/bracket, BracketView component com SVG lines, modal match details, /mata-mata page
 - **MVP 14.1** — Agenda Oficial: backend module public-schedule (today/upcoming/results/filter), /agenda page with tabs, ScheduleCard/ScheduleFilters, Jogos de Hoje na home
+- **MVP 16** — Histórico de Campeões: Champion model, auto-registro ao encerrar FINAL/TERCEIRO_LUGAR, /historico público com filtros, aba Histórico na página da modalidade
 
 ### In Progress
 - (none)
