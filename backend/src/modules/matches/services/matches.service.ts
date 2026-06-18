@@ -3,10 +3,14 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { MatchStatus, Fase } from '@prisma/client';
 import { UpdateMatchDto } from '../dto/update-match.dto';
 import { CreateManualMatchDto } from '../dto/create-manual-match.dto';
+import { ChampionsService } from '../../champions/champions.service';
 
 @Injectable()
 export class MatchesService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly championsService: ChampionsService,
+  ) {}
 
   private checkDb() {
     if (!this.prisma.isConnected) {
@@ -143,10 +147,16 @@ export class MatchesService {
     if (dto.displayOrder !== undefined) data.displayOrder = dto.displayOrder;
     if (dto.status !== undefined) data.status = dto.status;
 
-    return this.prisma.match.update({
+    const updated = await this.prisma.match.update({
       where: { id },
       data,
       include: { homeCity: true, awayCity: true },
     });
+
+    if (dto.status === MatchStatus.FINISHED && (match.fase === Fase.FINAL || match.fase === Fase.TERCEIRO_LUGAR)) {
+      await this.championsService.handleFinishedMatch(id);
+    }
+
+    return updated;
   }
 }

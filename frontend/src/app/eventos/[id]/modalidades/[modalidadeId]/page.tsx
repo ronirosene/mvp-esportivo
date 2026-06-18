@@ -7,6 +7,7 @@ import { eventSportCitiesApi, type EventSportCityData } from '@/services/event-s
 import { eventSportGroupsApi, type GroupData } from '@/services/event-sport-groups';
 import { matchesApi, type MatchData } from '@/services/matches';
 import { playoffsApi } from '@/services/playoffs';
+import { championsApi, type ChampionData } from '@/services/champions';
 
 interface StandingData {
   id: string;
@@ -35,6 +36,18 @@ const FASE_LABEL: Record<string, string> = {
   TERCEIRO_LUGAR: 'Terceiro Lugar',
 };
 
+const POSITION_EMOJI: Record<string, string> = {
+  CHAMPION: '\u{1F947}',
+  RUNNER_UP: '\u{1F948}',
+  THIRD_PLACE: '\u{1F949}',
+};
+
+const POSITION_LABEL: Record<string, string> = {
+  CHAMPION: 'Campeão',
+  RUNNER_UP: 'Vice-campeão',
+  THIRD_PLACE: '3º Lugar',
+};
+
 export default function ModalidadePublicDetail() {
   const params = useParams();
   const router = useRouter();
@@ -43,6 +56,8 @@ export default function ModalidadePublicDetail() {
   const [groups, setGroups] = useState<GroupWithStandings[]>([]);
   const [matches, setMatches] = useState<Record<string, MatchData[]>>({});
   const [playoffMatches, setPlayoffMatches] = useState<MatchData[]>([]);
+  const [champions, setChampions] = useState<ChampionData[]>([]);
+  const [activeTab, setActiveTab] = useState<'competicao' | 'historico'>('competicao');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -80,6 +95,10 @@ export default function ModalidadePublicDetail() {
         try {
           setPlayoffMatches(await playoffsApi.list(esId));
         } catch { setPlayoffMatches([]); }
+
+        try {
+          setChampions(await championsApi.byEventSport(esId));
+        } catch { setChampions([]); }
       } catch {} finally { setLoading(false); }
     }
     load();
@@ -104,6 +123,40 @@ export default function ModalidadePublicDetail() {
         <p className="mt-1 text-xs text-muted-foreground">{participants.length} cidade(s) participantes</p>
       </div>
 
+      <div className="flex gap-2 border-b">
+        <button className={`-mb-px border-b-2 px-4 py-2 text-sm font-medium transition-colors ${activeTab === 'competicao' ? 'border-primary text-foreground' : 'border-transparent text-muted-foreground hover:text-foreground'}`} onClick={() => setActiveTab('competicao')}>Competição</button>
+        <button className={`-mb-px border-b-2 px-4 py-2 text-sm font-medium transition-colors ${activeTab === 'historico' ? 'border-primary text-foreground' : 'border-transparent text-muted-foreground hover:text-foreground'}`} onClick={() => setActiveTab('historico')}>Histórico</button>
+      </div>
+
+      {activeTab === 'historico' && (
+        <div>
+          <h2 className="mb-3 text-lg font-semibold">Campeões</h2>
+          {champions.length === 0 ? (
+            <p className="text-sm text-muted-foreground">Nenhum campeão registrado nesta modalidade.</p>
+          ) : (
+            <div className="space-y-3">
+              {(['CHAMPION', 'RUNNER_UP', 'THIRD_PLACE'] as const).map((pos) => {
+                const c = champions.find((ch) => ch.position === pos);
+                if (!c) return null;
+                return (
+                  <div key={pos} className="flex items-center gap-3 rounded-lg border p-4">
+                    <span className="text-2xl">{POSITION_EMOJI[pos]}</span>
+                    <div>
+                      <p className="text-sm font-semibold">{c.city.nome} - {c.city.siglaEstado}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {POSITION_LABEL[pos]} ({c.event.ano})
+                      </p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
+
+      {activeTab === 'competicao' && (
+        <>
       {groups.length > 0 && (
         <div>
           <h2 className="mb-3 text-lg font-semibold">Grupos</h2>
@@ -207,6 +260,8 @@ export default function ModalidadePublicDetail() {
           </div>
         );
       })}
+        </>
+      )}
     </div>
   );
 }

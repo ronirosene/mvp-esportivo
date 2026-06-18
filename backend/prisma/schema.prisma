@@ -69,6 +69,12 @@ enum InscricaoStatus {
   DESISTENTE
 }
 
+enum ChampionPosition {
+  CHAMPION
+  RUNNER_UP
+  THIRD_PLACE
+}
+
 model User {
   id        String   @id @default(uuid()) @db.Uuid
   nome      String
@@ -93,6 +99,7 @@ model Event {
 
   eventSports EventSport[]
   teams       Team[]
+  champions   Champion[]
 }
 
 model Sport {
@@ -125,6 +132,7 @@ model EventSport {
   groups             Group[]
   matches            Match[]
   competitionFormat  CompetitionFormat?
+  champions          Champion[]
 
   @@unique([eventId, sportId, gender, ageCategory])
 }
@@ -171,6 +179,7 @@ model City {
   homeMatches      Match[]         @relation("homeMatches")
   awayMatches      Match[]         @relation("awayMatches")
   groupStandings   GroupStanding[]
+  champions        Champion[]
 
   @@unique([nome, siglaEstado])
 }
@@ -257,4 +266,19 @@ model GroupStanding {
   city  City  @relation(fields: [cityId], references: [id], onDelete: Restrict)
 
   @@unique([groupId, cityId])
+}
+
+model Champion {
+  id           String           @id @default(uuid()) @db.Uuid
+  eventId      String           @db.Uuid
+  eventSportId String           @db.Uuid
+  cityId       String           @db.Uuid
+  position     ChampionPosition
+  createdAt    DateTime         @default(now())
+
+  event      Event      @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  eventSport EventSport @relation(fields: [eventSportId], references: [id], onDelete: Cascade)
+  city       City       @relation(fields: [cityId], references: [id], onDelete: Restrict)
+
+  @@unique([eventSportId, position])
 }
