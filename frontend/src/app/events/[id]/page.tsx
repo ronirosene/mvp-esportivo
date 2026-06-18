@@ -373,8 +373,7 @@ const [playoffs, setPlayoffs] = useState<Record<string, MatchData[]>>({});
                   <div key={es.id} className="rounded-md border">
                     <div className="flex items-center justify-between border-b bg-muted/30 px-3 py-2">
                       <div>
-                        <span className="text-sm font-medium">{es.sport.nome}</span>
-                        <span className="ml-2 text-xs text-muted-foreground">{es.sport.categoria}</span>
+                        <span className="text-sm font-medium">{es.displayName || es.sport.nome}</span>
                       </div>
                       {token && (
                         <Button variant="ghost" size="sm" className="text-destructive" onClick={() => handleRemoveSport(es.sport.id)}>

@@ -46,6 +46,23 @@ enum FormatType {
   MANUAL
 }
 
+enum Gender {
+  MASCULINO
+  FEMININO
+  MISTO
+  OPEN
+}
+
+enum AgeCategory {
+  LIVRE
+  SUB_14
+  SUB_16
+  SUB_18
+  SUB_20
+  VETERANO
+  MASTER
+}
+
 enum InscricaoStatus {
   INSCRITO
   CONFIRMADO
@@ -81,21 +98,28 @@ model Event {
 model Sport {
   id        String   @id @default(uuid()) @db.Uuid
   nome      String
-  categoria String
+  categoria String   @default("")
+  ativo     Boolean  @default(true)
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   eventSports EventSport[]
   teams       Team[]
 }
 
+// TODO 0014: Add @unique to Sport.nome, remove Sport.categoria
+
 model EventSport {
-  id                  String   @id @default(uuid()) @db.Uuid
-  eventId             String   @db.Uuid
-  sportId             String   @db.Uuid
-  classificationCount Int      @default(2)
-  generateThirdPlace  Boolean  @default(true)
-  drawMode            DrawMode @default(AUTOMATIC)
-  createdAt           DateTime @default(now())
+  id                  String      @id @default(uuid()) @db.Uuid
+  eventId             String      @db.Uuid
+  sportId             String      @db.Uuid
+  gender              Gender      @default(OPEN)
+  ageCategory         AgeCategory @default(LIVRE)
+  displayName         String
+  classificationCount Int         @default(2)
+  generateThirdPlace  Boolean     @default(true)
+  drawMode            DrawMode    @default(AUTOMATIC)
+  createdAt           DateTime    @default(now())
 
   event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
   sport Sport @relation(fields: [sportId], references: [id], onDelete: Restrict)
@@ -105,7 +129,7 @@ model EventSport {
   matches            Match[]
   competitionFormat  CompetitionFormat?
 
-  @@unique([eventId, sportId])
+  @@unique([eventId, sportId, gender, ageCategory])
 }
 
 model EventSportCity {

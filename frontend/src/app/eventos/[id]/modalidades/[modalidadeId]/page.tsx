@@ -100,8 +100,7 @@ export default function ModalidadePublicDetail() {
       <button className="text-sm text-muted-foreground hover:text-foreground" onClick={() => router.push(`/eventos/${params.id}`)}>&larr; Voltar ao evento</button>
 
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">{eventSport.sport.nome}</h1>
-        <p className="text-sm text-muted-foreground">{eventSport.sport.categoria}</p>
+        <h1 className="text-2xl font-bold tracking-tight">{eventSport.displayName || eventSport.sport.nome}</h1>
         <p className="mt-1 text-xs text-muted-foreground">{participants.length} cidade(s) participantes</p>
       </div>
 

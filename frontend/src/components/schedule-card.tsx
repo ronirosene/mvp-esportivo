@@ -13,6 +13,7 @@ interface ScheduleMatch {
   eventSport: {
     sport: { nome: string; categoria: string };
     event: { nome: string };
+    displayName?: string;
   };
 }
 
@@ -40,7 +41,7 @@ export default function ScheduleCard({ match }: ScheduleCardProps) {
     <div className="flex flex-col gap-2 rounded-lg border p-4 transition-colors hover:bg-muted/30">
       <div className="flex items-center gap-2 text-xs text-muted-foreground">
         {time && <span className="font-semibold tabular-nums">{time}</span>}
-        <span className="truncate">{match.eventSport.sport.nome}</span>
+        <span className="truncate">{match.eventSport.displayName || match.eventSport.sport.nome}</span>
         {isLive && (
           <span className="ml-auto rounded-full bg-red-500 px-2 py-0.5 text-[10px] font-bold text-white">
             AO VIVO

@@ -21,7 +21,7 @@ export class EventSportsController {
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Vincular modalidade ao evento' })
   create(@Param('eventId') eventId: string, @Body() dto: CreateEventSportDto) {
-    return this.eventSportsService.create(eventId, dto.sportId);
+    return this.eventSportsService.create(eventId, dto.sportId, dto.gender, dto.ageCategory, dto.displayName);
   }
 
   @Put(':id')

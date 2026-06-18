@@ -108,8 +108,7 @@ export default function EventoPublicDetail() {
                 className="cursor-pointer rounded-lg border p-4 transition-colors hover:bg-muted/50"
                 onClick={() => router.push(`/eventos/${event.id}/modalidades/${es.id}`)}
               >
-                <p className="font-medium">{es.sport.nome}</p>
-                <p className="text-xs text-muted-foreground">{es.sport.categoria}</p>
+                <p className="font-medium">{es.displayName || es.sport.nome}</p>
                 <p className="mt-1 text-xs text-muted-foreground">{participants[es.id]?.length ?? 0} cidade(s)</p>
               </div>
             ))}
