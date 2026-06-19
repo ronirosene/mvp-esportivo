@@ -17,8 +17,9 @@ import { ChampionsModule } from './modules/champions/champions.module';
 import { CityHistoryModule } from './modules/city-history/city-history.module';
 import { RankingModule } from './modules/ranking/ranking.module';
 import { SponsorsModule } from './modules/sponsors/sponsors.module';
+import { CityPortalModule } from './modules/city-portal/city-portal.module';
 
 @Module({
-  imports: [EnvConfigModule, PrismaModule, HealthModule, AuthModule, EventsModule, EventSportsModule, CitiesModule, EventSportCitiesModule, GroupsModule, MatchesModule, StandingsModule, PlayoffsModule, CompetitionFormatsModule, PublicScheduleModule, ChampionsModule, CityHistoryModule, RankingModule, SponsorsModule],
+  imports: [EnvConfigModule, PrismaModule, HealthModule, AuthModule, EventsModule, EventSportsModule, CitiesModule, EventSportCitiesModule, GroupsModule, MatchesModule, StandingsModule, PlayoffsModule, CompetitionFormatsModule, PublicScheduleModule, ChampionsModule, CityHistoryModule, RankingModule, SponsorsModule, CityPortalModule],
 })
 export class AppModule {}

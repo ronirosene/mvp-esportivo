@@ -28,12 +28,21 @@ export async function api<T = unknown>(
   return res.json();
 }
 
+export interface AuthUser {
+  id: string;
+  nome: string;
+  email: string;
+  role: string;
+  cityId?: string | null;
+  city?: { id: string; nome: string; siglaEstado: string } | null;
+}
+
 export const authApi = {
   login: (email: string, senha: string) =>
-    api<{ accessToken: string; user: { id: string; nome: string; email: string; role: string } }>(
+    api<{ accessToken: string; user: AuthUser }>(
       '/auth/login',
       { method: 'POST', body: JSON.stringify({ email, senha }) },
     ),
   me: () =>
-    api<{ id: string; nome: string; email: string; role: string }>('/auth/me'),
+    api<AuthUser>('/auth/me'),
 };

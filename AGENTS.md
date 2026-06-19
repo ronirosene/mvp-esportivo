@@ -82,6 +82,7 @@ Monorepo (backend/ + frontend/) — sistema de gestão de eventos esportivos com
 - **MVP 16** — Histórico de Campeões: Champion model, auto-registro ao encerrar FINAL/TERCEIRO_LUGAR, /historico público com filtros, aba Histórico na página da modalidade
 - **MVP 17** — Página da Cidade e Estatísticas Históricas: city-history module (4 endpoints públicos), /cidades list+detail pages, links clicáveis em toda aplicação, SEO dinâmico
 - **MVP 18** — Ranking Histórico das Cidades: ranking module (GET /public/ranking com filtros), /ranking page com tabela + destaques visuais + critério de pontuação 5/3/1, link na página da cidade, Top 5 na home
+- **MVP 19** — Patrocinadores e Anúncios: Sponsor model + migration 0016, módulo sponsors (CRUD admin + GET /public/sponsors + views/clicks), CRUD admin (/sponsors), SponsorsBar component exibido em home/evento/agenda/ranking, rel=nofollow sponsored
 
 ### In Progress
 - (none)
@@ -116,6 +117,7 @@ Monorepo (backend/ + frontend/) — sistema de gestão de eventos esportivos com
 - `backend/src/modules/public-schedule/` — Public schedule (today/upcoming/results/filter)
 - `backend/src/modules/city-history/` — Public city history/stats endpoints
 - `backend/src/modules/ranking/` — Public ranking endpoint
+- `backend/src/modules/sponsors/` — Sponsor CRUD + public endpoint
 - `backend/src/modules/auth/` — JWT auth
 - `backend/Dockerfile` — Multi-stage with node:20-slim
 - `backend/fly.toml` — Fly.io config (app mvp-backend-little-woodland-6494, region gru)
@@ -125,6 +127,7 @@ Monorepo (backend/ + frontend/) — sistema de gestão de eventos esportivos com
 - `frontend/src/app/page.tsx` — Landing page publica com eventos + Jogos de Hoje
 - `frontend/src/app/eventos/` — Rotas publicas (/eventos, /eventos/[id], /eventos/[id]/modalidades/[id], /mata-mata)
 - `frontend/src/app/agenda/` — Pagina publica de agenda com abas e filtros
+- `frontend/src/app/sponsors/` — Admin: Sponsor CRUD pages
 - `frontend/src/app/events/[id]/page.tsx` — Admin: event detail with sports/participants/groups/playoffs
 - `frontend/src/app/cities/` — Admin: Cities CRUD pages
 - `frontend/src/components/bracket-view.tsx` — Visual bracket component with SVG connectors

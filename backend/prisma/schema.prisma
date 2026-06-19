@@ -10,6 +10,13 @@ datasource db {
 enum Role {
   ADMIN
   ORGANIZADOR
+  CIDADE
+}
+
+enum RegistrationStatus {
+  PENDENTE
+  CONFIRMADA
+  RECUSADA
 }
 
 enum EventStatus {
@@ -81,8 +88,25 @@ model User {
   email     String   @unique
   senha     String
   role      Role     @default(ORGANIZADOR)
+  cityId    String?  @db.Uuid
+  ativo     Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  city         City?          @relation(fields: [cityId], references: [id], onDelete: SetNull)
+  inviteTokens InviteToken[]
+}
+
+model InviteToken {
+  id        String    @id @default(uuid()) @db.Uuid
+  token     String    @unique
+  userId    String    @db.Uuid
+  email     String
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Event {
@@ -180,6 +204,7 @@ model City {
   awayMatches      Match[]         @relation("awayMatches")
   groupStandings   GroupStanding[]
   champions        Champion[]
+  users            User[]
 
   @@unique([nome, siglaEstado])
 }

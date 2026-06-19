@@ -136,6 +136,13 @@ function Sidebar() {
           Cidades
         </a>
         <a
+          href="/city-users"
+          onClick={(e) => { e.preventDefault(); router.push('/city-users'); }}
+          className="block rounded-md px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-muted"
+        >
+          Cidades (Usuários)
+        </a>
+        <a
           href="/sponsors"
           onClick={(e) => { e.preventDefault(); router.push('/sponsors'); }}
           className="block rounded-md px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-muted"
@@ -175,6 +182,10 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
     if (!user && pathname !== '/login') {
       router.push('/login');
     }
+    if (user && pathname === '/login') {
+      if (user.role === 'CIDADE') router.push('/portal-cidade');
+      else router.push('/events');
+    }
   }, [user, loading, pathname, router]);
 
   if (loading) {
@@ -189,6 +200,24 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
 
   if (pathname === '/login') {
     return <>{children}</>;
+  }
+
+  if (user?.role === 'CIDADE') {
+    return (
+      <div className="flex min-h-screen flex-col">
+        <header className="sticky top-0 z-40 border-b bg-background">
+          <div className="mx-auto flex h-14 max-w-5xl items-center justify-between px-4">
+            <span className="text-base font-bold tracking-tight cursor-pointer" onClick={() => router.push('/portal-cidade')}>
+              Portal da Cidade
+            </span>
+            <span className="cursor-pointer text-sm text-muted-foreground hover:text-foreground" onClick={() => { localStorage.removeItem('@mvp:token'); localStorage.removeItem('@mvp:user'); router.push('/login'); }}>
+              Sair
+            </span>
+          </div>
+        </header>
+        <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-6">{children}</main>
+      </div>
+    );
   }
 
   return (

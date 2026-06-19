@@ -21,9 +21,11 @@ export class AuthService {
     this.checkDb();
     const user = await this.prisma.user.findUnique({
       where: { email: dto.email },
+      include: { city: { select: { id: true, nome: true, siglaEstado: true } } },
     });
 
     if (!user) throw new UnauthorizedException('Credenciais inválidas');
+    if (!user.ativo) throw new UnauthorizedException('Usuário desativado');
 
     const senhaValida = await bcrypt.compare(dto.senha, user.senha);
     if (!senhaValida) throw new UnauthorizedException('Credenciais inválidas');
@@ -38,6 +40,8 @@ export class AuthService {
         nome: user.nome,
         email: user.email,
         role: user.role,
+        cityId: user.cityId,
+        city: user.city,
       },
     };
   }
@@ -46,9 +50,9 @@ export class AuthService {
     this.checkDb();
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
-      select: { id: true, nome: true, email: true, role: true },
+      include: { city: { select: { id: true, nome: true, siglaEstado: true } } },
     });
     if (!user) throw new UnauthorizedException('Usuário não encontrado');
-    return user;
+    return { id: user.id, nome: user.nome, email: user.email, role: user.role, cityId: user.cityId, city: user.city };
   }
 }
