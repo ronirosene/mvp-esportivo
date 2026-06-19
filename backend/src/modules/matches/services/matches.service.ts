@@ -4,12 +4,16 @@ import { MatchStatus, Fase } from '@prisma/client';
 import { UpdateMatchDto } from '../dto/update-match.dto';
 import { CreateManualMatchDto } from '../dto/create-manual-match.dto';
 import { ChampionsService } from '../../champions/champions.service';
+import { StandingsService } from '../../standings/services/standings.service';
+import { LiveService } from '../../live/live.service';
 
 @Injectable()
 export class MatchesService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly championsService: ChampionsService,
+    private readonly standingsService: StandingsService,
+    private readonly liveService: LiveService,
   ) {}
 
   private checkDb() {
@@ -129,7 +133,10 @@ export class MatchesService {
 
   async update(id: string, dto: UpdateMatchDto) {
     this.checkDb();
-    const match = await this.prisma.match.findUnique({ where: { id } });
+    const match = await this.prisma.match.findUnique({
+      where: { id },
+      include: { eventSport: { include: { event: true } } },
+    });
     if (!match) throw new NotFoundException('Partida não encontrada');
 
     if (dto.status === MatchStatus.FINISHED) {
@@ -137,6 +144,10 @@ export class MatchesService {
         throw new BadRequestException('Partida finalizada exige placar.');
       }
     }
+
+    const prevStatus = match.status;
+    const prevHomeScore = match.homeScore;
+    const prevAwayScore = match.awayScore;
 
     const data: Record<string, unknown> = {};
     if (dto.homeScore !== undefined) data.homeScore = dto.homeScore;
@@ -153,8 +164,41 @@ export class MatchesService {
       include: { homeCity: true, awayCity: true },
     });
 
+    const orgId = (match.eventSport.event as any).organizationId || null;
+    const eventSportId = match.eventSportId;
+    const eventId = match.eventSport.eventId;
+
+    if (dto.status !== undefined && dto.status !== prevStatus) {
+      if (dto.status === MatchStatus.IN_PROGRESS) {
+        this.liveService.emitMatchStarted(id, updated);
+      }
+      if (dto.status === MatchStatus.FINISHED) {
+        this.liveService.emitMatchFinished(id, eventSportId, updated);
+      }
+      if (dto.status === MatchStatus.CANCELLED) {
+        this.liveService.emitMatchCancelled(id, eventSportId, updated);
+      }
+    }
+
+    const scoreChanged = dto.homeScore !== undefined || dto.awayScore !== undefined;
+    if (scoreChanged) {
+      this.liveService.emitScoreUpdated(id, eventSportId, updated);
+    }
+
+    this.liveService.emitMatchUpdated(id, eventSportId, eventId, orgId, updated);
+
+    const statusChangedOrFinished = dto.status !== undefined && dto.status !== prevStatus;
+    if (scoreChanged || statusChangedOrFinished) {
+      if (updated.groupId) {
+        const standings = await this.standingsService.recalculateGroup(updated.groupId);
+        this.liveService.emitStandingsUpdated(eventSportId, standings);
+      }
+    }
+
     if (dto.status === MatchStatus.FINISHED && (match.fase === Fase.FINAL || match.fase === Fase.TERCEIRO_LUGAR)) {
       await this.championsService.handleFinishedMatch(id);
+      const champions = await this.prisma.champion.findMany({ where: { eventSportId } });
+      this.liveService.emitChampionDefined(eventSportId, champions);
     }
 
     return updated;

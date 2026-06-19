@@ -22,6 +22,7 @@ import { SponsorsModule } from './modules/sponsors/sponsors.module';
 import { OrganizationsModule } from './modules/organizations/organizations.module';
 import { CityPortalModule } from './modules/city-portal/city-portal.module';
 import { ObservabilityModule } from './modules/observability/observability.module';
+import { LiveModule } from './modules/live/live.module';
 import { CustomThrottlerGuard } from './common/guards/custom-throttler.guard';
 import { RequestIdMiddleware } from './common/middleware/request-id.middleware';
 
@@ -49,6 +50,7 @@ import { RequestIdMiddleware } from './common/middleware/request-id.middleware';
     OrganizationsModule,
     CityPortalModule,
     ObservabilityModule,
+    LiveModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: CustomThrottlerGuard },

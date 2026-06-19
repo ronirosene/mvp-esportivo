@@ -7,6 +7,7 @@ import { eventSportsApi } from '@/services/event-sports';
 import { eventSportCitiesApi } from '@/services/event-sport-cities';
 import { api } from '@/services/api';
 import { rankingApi, type RankingEntry } from '@/services/ranking';
+import { getLiveMatches } from '@/services/live';
 import SponsorsBar from '@/components/sponsors-bar';
 
 const STATUS_LABEL: Record<string, string> = {
@@ -28,6 +29,7 @@ export default function PublicHome() {
   const [loading, setLoading] = useState(true);
   const [todayMatches, setTodayMatches] = useState<any[]>([]);
   const [topRanking, setTopRanking] = useState<RankingEntry[]>([]);
+  const [liveCount, setLiveCount] = useState(0);
 
   useEffect(() => {
     async function load() {
@@ -55,6 +57,10 @@ export default function PublicHome() {
           const r = await rankingApi.get();
           setTopRanking(r.slice(0, 5));
         } catch {}
+        try {
+          const live = await getLiveMatches();
+          setLiveCount(live.length);
+        } catch {}
       } catch {} finally { setLoading(false); }
     }
     load();
@@ -72,6 +78,24 @@ export default function PublicHome() {
         <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">Eventos Esportivos</h1>
         <p className="mt-2 text-muted-foreground">Acompanhe resultados, classificação e jogos ao vivo.</p>
       </section>
+
+      {liveCount > 0 && (
+        <section>
+          <div
+            className="flex cursor-pointer items-center justify-between rounded-lg border border-red-200 bg-red-50 px-5 py-4 dark:border-red-900 dark:bg-red-950/20"
+            onClick={() => router.push('/ao-vivo')}
+          >
+            <div className="flex items-center gap-3">
+              <span className="inline-block h-3 w-3 rounded-full bg-red-500 animate-pulse" />
+              <span className="font-semibold">🔴 Jogos Ao Vivo</span>
+              <span className="rounded-full bg-red-100 px-2 py-0.5 text-xs font-bold text-red-700 dark:bg-red-900 dark:text-red-300">
+                {liveCount}
+              </span>
+            </div>
+            <span className="text-sm text-muted-foreground hover:text-foreground">Ver todos &rarr;</span>
+          </div>
+        </section>
+      )}
 
       <div className="grid gap-6 sm:grid-cols-2">
         {todayMatches.length > 0 && (

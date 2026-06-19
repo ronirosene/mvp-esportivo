@@ -7,5 +7,6 @@ import { ChampionsModule } from '../champions/champions.module';
   imports: [ChampionsModule],
   controllers: [MatchesController],
   providers: [MatchesService],
+  exports: [MatchesService],
 })
 export class MatchesModule {}

@@ -15,6 +15,7 @@ function isPublicRoute(pathname: string): boolean {
   if (pathname === '/') return true;
   if (pathname.startsWith('/eventos')) return true;
   if (pathname.startsWith('/agenda')) return true;
+  if (pathname.startsWith('/ao-vivo')) return true;
   if (pathname.startsWith('/historico')) return true;
   if (pathname.startsWith('/cidades')) return true;
   if (pathname.startsWith('/ranking')) return true;
@@ -50,6 +51,12 @@ function PublicHeader() {
               onClick={() => router.push('/agenda')}
             >
               Agenda
+            </span>
+            <span
+              className={`cursor-pointer text-sm ${pathname.startsWith('/ao-vivo') ? 'font-medium text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+              onClick={() => router.push('/ao-vivo')}
+            >
+              Ao Vivo
             </span>
             <span
               className={`cursor-pointer text-sm ${pathname.startsWith('/historico') ? 'font-medium text-foreground' : 'text-muted-foreground hover:text-foreground'}`}

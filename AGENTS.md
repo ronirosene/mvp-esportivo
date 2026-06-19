@@ -27,6 +27,16 @@ Monorepo (backend/ + frontend/) — sistema de gestão de eventos esportivos com
 - `npm run start` — Start production server
 - Update `frontend/public/build-info.json` with version and commit before deploy
 
+## MVP 23 Features
+- **Live Gateway**: WebSocket `/live` namespace with rooms (organization, event, sport, match)
+- **Socket events**: join/leave rooms + emit matchStarted, scoreUpdated, matchFinished, etc.
+- **GET /public/live**: SSR inicial com partidas IN_PROGRESS
+- **/ao-vivo page**: página pública com placar ao vivo, selo 🔴 AO VIVO, última atualização HH:mm:ss
+- **Home**: card "Jogos Ao Vivo" com contagem + link
+- **Integração automática**: MatchService, Standings, Playoffs, Champions emitem eventos via socket
+- **Reconexão**: auto reconnect com backoff exponencial, heartbeat
+- **Rate limit**: 50 eventos/min por conexão socket
+
 ## MVP 22.5 Features
 - **Rate limiting**: public 100 req/min, login 10 req/min, admin 300 req/min (@nestjs/throttler)
 - **Request ID**: x-request-id header on all requests (request-id.middleware.ts)

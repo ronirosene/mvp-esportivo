@@ -1,10 +1,14 @@
 import { Injectable, NotFoundException, BadRequestException, ServiceUnavailableException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { Fase } from '@prisma/client';
+import { LiveService } from '../../live/live.service';
 
 @Injectable()
 export class PlayoffsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly liveService: LiveService,
+  ) {}
 
   private checkDb() {
     if (!this.prisma.isConnected) {
@@ -94,7 +98,9 @@ export class PlayoffsService {
       });
     }
 
-    return this.findByEventSport(eventSportId);
+    const bracket = await this.getBracket(eventSportId);
+    this.liveService.emitPlayoffsUpdated(eventSportId, bracket);
+    return bracket;
   }
 
   async advance(eventSportId: string) {
@@ -200,7 +206,9 @@ export class PlayoffsService {
       throw new BadRequestException('N\u00e3o h\u00e1 fase para avan\u00e7ar.');
     }
 
-    return this.findByEventSport(eventSportId);
+    const bracket = await this.getBracket(eventSportId);
+    this.liveService.emitPlayoffsUpdated(eventSportId, bracket);
+    return bracket;
   }
 
   async getBracket(eventSportId: string) {
