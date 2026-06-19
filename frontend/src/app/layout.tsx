@@ -4,6 +4,7 @@ import { Inter } from 'next/font/google';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { useEffect } from 'react';
 import { AuthProvider, useAuth } from '@/contexts/auth-context';
+import InstallPrompt from '@/components/install-prompt';
 import './globals.css';
 
 const inter = Inter({ subsets: ['latin'] });
@@ -70,7 +71,8 @@ function PublicHeader() {
             </span>
           </nav>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
+          <InstallPrompt />
           <span
             className="cursor-pointer text-sm text-muted-foreground hover:text-foreground"
             onClick={() => router.push('/')}
@@ -256,6 +258,39 @@ export default function RootLayout({
 }) {
   const pathname = usePathname();
   const isPublic = isPublicRoute(pathname);
+
+  useEffect(() => {
+    const link = document.createElement('link');
+    link.rel = 'manifest';
+    link.href = '/manifest.json';
+    if (!document.querySelector('link[rel="manifest"]')) document.head.appendChild(link);
+
+    const metaTags = [
+      { name: 'apple-mobile-web-app-capable', content: 'yes' },
+      { name: 'apple-mobile-web-app-status-bar-style', content: 'black-translucent' },
+      { name: 'theme-color', content: '#18181b' },
+      { name: 'apple-mobile-web-app-title', content: 'MVP Esportivo' },
+    ];
+    metaTags.forEach(({ name, content }) => {
+      if (!document.querySelector(`meta[name="${name}"]`)) {
+        const m = document.createElement('meta');
+        m.name = name;
+        m.content = content;
+        document.head.appendChild(m);
+      }
+    });
+
+    if (!document.querySelector('link[rel="apple-touch-icon"]')) {
+      const appleIcon = document.createElement('link');
+      appleIcon.rel = 'apple-touch-icon';
+      appleIcon.href = '/icon.svg';
+      document.head.appendChild(appleIcon);
+    }
+
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch(() => {});
+    }
+  }, []);
 
   return (
     <html lang="pt-BR" suppressHydrationWarning>
