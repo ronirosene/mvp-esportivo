@@ -11,13 +11,17 @@ export class SponsorsService {
     return this.prisma.sponsor.create({ data: dto as any });
   }
 
-  async findAll() {
-    return this.prisma.sponsor.findMany({ orderBy: { ordem: 'asc' as const } });
+  async findAll(orgSlug?: string) {
+    const where: any = {};
+    if (orgSlug) where.organization = { slug: orgSlug };
+    return this.prisma.sponsor.findMany({ where, orderBy: { ordem: 'asc' as const } });
   }
 
-  async findPublic() {
+  async findPublic(orgSlug?: string) {
+    const where: any = { ativo: true };
+    if (orgSlug) where.organization = { slug: orgSlug };
     return this.prisma.sponsor.findMany({
-      where: { ativo: true },
+      where,
       orderBy: [{ destaque: 'desc' as const }, { ordem: 'asc' as const }],
     });
   }

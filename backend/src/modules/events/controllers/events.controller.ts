@@ -22,8 +22,9 @@ export class EventsController {
   @ApiOperation({ summary: 'Listar eventos' })
   @ApiQuery({ name: 'nome', required: false })
   @ApiQuery({ name: 'ano', required: false })
-  findAll(@Query('nome') nome?: string, @Query('ano') ano?: string) {
-    return this.eventsService.findAll(nome, ano ? Number(ano) : undefined);
+  @ApiQuery({ name: 'orgSlug', required: false })
+  findAll(@Query('nome') nome?: string, @Query('ano') ano?: string, @Query('orgSlug') orgSlug?: string) {
+    return this.eventsService.findAll(nome, ano ? Number(ano) : undefined, orgSlug);
   }
 
   @Get(':id')

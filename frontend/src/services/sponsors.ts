@@ -30,7 +30,7 @@ export interface CreateSponsorPayload {
 export type UpdateSponsorPayload = Partial<CreateSponsorPayload>;
 
 export const sponsorsApi = {
-  list: () => api<SponsorData[]>('/sponsors'),
+  list: (orgSlug?: string) => api<SponsorData[]>(`/sponsors${orgSlug ? `?orgSlug=${orgSlug}` : ''}`),
   get: (id: string) => api<SponsorData>(`/sponsors/${id}`),
   create: (data: CreateSponsorPayload) =>
     api<SponsorData>('/sponsors', { method: 'POST', body: JSON.stringify(data) }),
@@ -38,7 +38,7 @@ export const sponsorsApi = {
     api<SponsorData>(`/sponsors/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   remove: (id: string) =>
     api<void>(`/sponsors/${id}`, { method: 'DELETE' }),
-  listPublic: () => api<SponsorData[]>('/public/sponsors'),
+  listPublic: (orgSlug?: string) => api<SponsorData[]>(`/public/sponsors${orgSlug ? `?orgSlug=${orgSlug}` : ''}`),
   registerView: (id: string) =>
     api<void>(`/public/sponsors/${id}/view`, { method: 'POST' }),
   registerClick: (id: string) =>

@@ -9,20 +9,23 @@ export class PublicScheduleController {
 
   @Get('today')
   @ApiOperation({ summary: 'Jogos de hoje' })
-  today() {
-    return this.service.today();
+  @ApiQuery({ name: 'orgSlug', required: false })
+  today(@Query('orgSlug') orgSlug?: string) {
+    return this.service.today(orgSlug);
   }
 
   @Get('upcoming')
   @ApiOperation({ summary: 'Próximos jogos (7 dias)' })
-  upcoming() {
-    return this.service.upcoming();
+  @ApiQuery({ name: 'orgSlug', required: false })
+  upcoming(@Query('orgSlug') orgSlug?: string) {
+    return this.service.upcoming(orgSlug);
   }
 
   @Get('results')
   @ApiOperation({ summary: 'Últimos resultados (7 dias)' })
-  results() {
-    return this.service.results();
+  @ApiQuery({ name: 'orgSlug', required: false })
+  results(@Query('orgSlug') orgSlug?: string) {
+    return this.service.results(orgSlug);
   }
 
   @Get()
@@ -35,6 +38,7 @@ export class PublicScheduleController {
   @ApiQuery({ name: 'location', required: false })
   @ApiQuery({ name: 'status', required: false })
   @ApiQuery({ name: 'search', required: false })
+  @ApiQuery({ name: 'orgSlug', required: false })
   findAll(
     @Query('cityId') cityId?: string,
     @Query('sportId') sportId?: string,
@@ -44,7 +48,8 @@ export class PublicScheduleController {
     @Query('location') location?: string,
     @Query('status') status?: string,
     @Query('search') search?: string,
+    @Query('orgSlug') orgSlug?: string,
   ) {
-    return this.service.findAll({ cityId, sportId, eventId, dateFrom, dateTo, location, status, search });
+    return this.service.findAll({ cityId, sportId, eventId, dateFrom, dateTo, location, status, search, orgSlug });
   }
 }

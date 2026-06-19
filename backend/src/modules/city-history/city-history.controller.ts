@@ -10,25 +10,29 @@ export class CityHistoryController {
   @Get()
   @ApiOperation({ summary: 'Listar cidades (público)' })
   @ApiQuery({ name: 'search', required: false })
-  findAll(@Query('search') search?: string) {
-    return this.service.findAll(search);
+  @ApiQuery({ name: 'orgSlug', required: false })
+  findAll(@Query('search') search?: string, @Query('orgSlug') orgSlug?: string) {
+    return this.service.findAll(search, orgSlug);
   }
 
   @Get(':id')
   @ApiOperation({ summary: 'Detalhes da cidade' })
-  findOne(@Param('id') id: string) {
-    return this.service.findOne(id);
+  @ApiQuery({ name: 'orgSlug', required: false })
+  findOne(@Param('id') id: string, @Query('orgSlug') orgSlug?: string) {
+    return this.service.findOne(id, orgSlug);
   }
 
   @Get(':id/history')
   @ApiOperation({ summary: 'Histórico da cidade agrupado por ano' })
-  history(@Param('id') id: string) {
-    return this.service.history(id);
+  @ApiQuery({ name: 'orgSlug', required: false })
+  history(@Param('id') id: string, @Query('orgSlug') orgSlug?: string) {
+    return this.service.history(id, orgSlug);
   }
 
   @Get(':id/stats')
   @ApiOperation({ summary: 'Estatísticas agregadas da cidade' })
-  stats(@Param('id') id: string) {
-    return this.service.stats(id);
+  @ApiQuery({ name: 'orgSlug', required: false })
+  stats(@Param('id') id: string, @Query('orgSlug') orgSlug?: string) {
+    return this.service.stats(id, orgSlug);
   }
 }

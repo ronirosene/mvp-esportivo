@@ -42,4 +42,9 @@ export class CreateSponsorDto {
   @IsOptional()
   @IsEnum(['PATROCINADOR', 'APOIADOR', 'PARCEIRO', 'PUBLICIDADE'])
   tipo?: 'PATROCINADOR' | 'APOIADOR' | 'PARCEIRO' | 'PUBLICIDADE';
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  organizationId?: string;
 }

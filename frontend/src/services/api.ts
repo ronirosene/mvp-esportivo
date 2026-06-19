@@ -35,6 +35,8 @@ export interface AuthUser {
   role: string;
   cityId?: string | null;
   city?: { id: string; nome: string; siglaEstado: string } | null;
+  organizationId?: string | null;
+  organization?: { id: string; nome: string; slug: string } | null;
 }
 
 export const authApi = {

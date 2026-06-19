@@ -10,6 +10,7 @@ interface ScheduleFilter {
   location?: string;
   status?: string;
   search?: string;
+  orgSlug?: string;
 }
 
 @Injectable()
@@ -32,47 +33,54 @@ export class PublicScheduleService {
     { createdAt: 'asc' as const },
   ];
 
-  async today() {
+  async today(orgSlug?: string) {
     const start = new Date();
     start.setHours(0, 0, 0, 0);
     const end = new Date(start);
     end.setDate(end.getDate() + 1);
 
+    const where: any = { matchDate: { gte: start, lt: end } };
+    if (orgSlug) {
+      where.eventSport = { event: { organization: { slug: orgSlug } } };
+    }
+
     return this.prisma.match.findMany({
-      where: {
-        matchDate: { gte: start, lt: end },
-      },
+      where,
       include: this.include,
       orderBy: this.orderBy,
     });
   }
 
-  async upcoming() {
+  async upcoming(orgSlug?: string) {
     const now = new Date();
     const end = new Date(now);
     end.setDate(end.getDate() + 7);
 
+    const where: any = { matchDate: { gte: now, lte: end }, status: { not: 'FINISHED' } };
+    if (orgSlug) {
+      where.eventSport = { event: { organization: { slug: orgSlug } } };
+    }
+
     return this.prisma.match.findMany({
-      where: {
-        matchDate: { gte: now, lte: end },
-        status: { not: 'FINISHED' },
-      },
+      where,
       include: this.include,
       orderBy: this.orderBy,
     });
   }
 
-  async results() {
+  async results(orgSlug?: string) {
     const end = new Date();
     end.setHours(23, 59, 59, 999);
     const start = new Date(end);
     start.setDate(start.getDate() - 7);
 
+    const where: any = { matchDate: { gte: start, lte: end }, status: 'FINISHED' };
+    if (orgSlug) {
+      where.eventSport = { event: { organization: { slug: orgSlug } } };
+    }
+
     return this.prisma.match.findMany({
-      where: {
-        matchDate: { gte: start, lte: end },
-        status: 'FINISHED',
-      },
+      where,
       include: this.include,
       orderBy: [{ matchDate: 'desc' as const }, { createdAt: 'desc' as const }],
     });
@@ -94,6 +102,10 @@ export class PublicScheduleService {
 
     if (filters.eventId) {
       where.eventSport = { ...(where.eventSport || {}), eventId: filters.eventId };
+    }
+
+    if (filters.orgSlug) {
+      where.eventSport = { ...(where.eventSport || {}), event: { organization: { slug: filters.orgSlug } } };
     }
 
     if (filters.dateFrom || filters.dateTo) {

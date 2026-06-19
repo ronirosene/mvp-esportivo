@@ -33,4 +33,9 @@ export class CreateEventDto {
   @IsString()
   @IsOptional()
   logoUrl?: string;
+
+  @ApiPropertyOptional()
+  @IsString()
+  @IsOptional()
+  organizationId?: string;
 }

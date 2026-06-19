@@ -24,15 +24,17 @@ export class EventsService {
         dataFim: new Date(dto.dataFim),
         status: dto.status,
         logoUrl: dto.logoUrl,
+        organizationId: dto.organizationId,
       },
     });
   }
 
-  async findAll(nome?: string, ano?: number) {
+  async findAll(nome?: string, ano?: number, orgSlug?: string) {
     this.checkDb();
     const where: any = {};
     if (nome) where.nome = { contains: nome, mode: 'insensitive' };
     if (ano) where.ano = ano;
+    if (orgSlug) where.organization = { slug: orgSlug };
 
     return this.prisma.event.findMany({
       where,

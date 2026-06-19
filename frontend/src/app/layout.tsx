@@ -8,7 +8,7 @@ import './globals.css';
 
 const inter = Inter({ subsets: ['latin'] });
 
-const PUBLIC_ROUTES = ['/', '/eventos', '/agenda', '/historico', '/cidades', '/ranking'];
+const PUBLIC_ROUTES = ['/', '/eventos', '/agenda', '/historico', '/cidades', '/ranking', '/org'];
 
 function isPublicRoute(pathname: string): boolean {
   if (pathname === '/') return true;
@@ -17,6 +17,7 @@ function isPublicRoute(pathname: string): boolean {
   if (pathname.startsWith('/historico')) return true;
   if (pathname.startsWith('/cidades')) return true;
   if (pathname.startsWith('/ranking')) return true;
+  if (pathname.startsWith('/org')) return true;
   if (pathname.startsWith('/login')) return true;
   return false;
 }
@@ -70,6 +71,12 @@ function PublicHeader() {
           </nav>
         </div>
         <div className="flex items-center gap-3">
+          <span
+            className="cursor-pointer text-sm text-muted-foreground hover:text-foreground"
+            onClick={() => router.push('/')}
+          >
+            In&iacute;cio
+          </span>
           {user ? (
             <span
               className="cursor-pointer text-sm text-muted-foreground hover:text-foreground"
@@ -148,6 +155,20 @@ function Sidebar() {
           className="block rounded-md px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-muted"
         >
           Patrocinadores
+        </a>
+        <a
+          href="/organizations"
+          onClick={(e) => { e.preventDefault(); router.push('/organizations'); }}
+          className="block rounded-md px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-muted"
+        >
+          Organiza&ccedil;&otilde;es
+        </a>
+        <a
+          href="/organizations/dashboard"
+          onClick={(e) => { e.preventDefault(); router.push('/organizations/dashboard'); }}
+          className="block rounded-md px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-muted"
+        >
+          Dashboard
         </a>
         <a
           href="/"

@@ -22,4 +22,12 @@ export class AuthController {
   me(@Request() req: { user: { id: string } }) {
     return this.authService.me(req.user.id);
   }
+
+  @Get('me/org')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Retorna organização do usuário' })
+  myOrg(@Request() req: { user: { id: string } }) {
+    return this.authService.meOrg(req.user.id);
+  }
 }

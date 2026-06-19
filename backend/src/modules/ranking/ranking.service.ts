@@ -5,6 +5,7 @@ export interface RankingFilters {
   eventId?: string;
   sportId?: string;
   year?: number;
+  orgSlug?: string;
 }
 
 export interface RankingEntry {
@@ -29,6 +30,9 @@ export class RankingService {
     if (filters.eventId) championWhere.eventId = filters.eventId;
     if (filters.sportId) championWhere.eventSport = { sportId: filters.sportId };
     if (filters.year) championWhere.event = { ano: filters.year };
+    if (filters.orgSlug) {
+      championWhere.event = { ...(championWhere.event || {}), organization: { slug: filters.orgSlug } };
+    }
 
     const champions = await this.prisma.champion.findMany({
       where: championWhere,
@@ -46,8 +50,13 @@ export class RankingService {
         participationsMap.set(esc.cityId, (participationsMap.get(esc.cityId) || 0) + 1);
       }
     } else {
+      const participationWhere: any = {};
+      if (filters.orgSlug) {
+        participationWhere.eventSport = { event: { organization: { slug: filters.orgSlug } } };
+      }
       const participationsByCity = await this.prisma.eventSportCity.groupBy({
         by: ['cityId'],
+        where: participationWhere,
         _count: true,
       });
       participationsMap = new Map(participationsByCity.map((p) => [p.cityId, p._count]));

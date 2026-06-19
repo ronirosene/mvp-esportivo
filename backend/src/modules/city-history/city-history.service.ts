@@ -5,13 +5,22 @@ import { PrismaService } from '../prisma/prisma.service';
 export class CityHistoryService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findAll(search?: string) {
+  async findAll(search?: string, orgSlug?: string) {
     const where: any = {};
     if (search) {
       where.OR = [
         { nome: { contains: search, mode: 'insensitive' } },
         { siglaEstado: { contains: search, mode: 'insensitive' } },
       ];
+    }
+    if (orgSlug) {
+      where.eventSportCities = {
+        some: {
+          eventSport: {
+            event: { organization: { slug: orgSlug } },
+          },
+        },
+      };
     }
     const cities = await this.prisma.city.findMany({
       where,
@@ -29,11 +38,17 @@ export class CityHistoryService {
     }));
   }
 
-  async findOne(id: string) {
+  async findOne(id: string, orgSlug?: string) {
     const city = await this.prisma.city.findUnique({ where: { id } });
     if (!city) throw new NotFoundException('Cidade não encontrada');
-    const champions = await this.prisma.champion.findMany({ where: { cityId: id } });
-    const participacoes = await this.prisma.eventSportCity.count({ where: { cityId: id } });
+    const championWhere: any = { cityId: id };
+    const participationWhere: any = { cityId: id };
+    if (orgSlug) {
+      championWhere.event = { organization: { slug: orgSlug } };
+      participationWhere.eventSport = { event: { organization: { slug: orgSlug } } };
+    }
+    const champions = await this.prisma.champion.findMany({ where: championWhere });
+    const participacoes = await this.prisma.eventSportCity.count({ where: participationWhere });
     return {
       ...city,
       totalTitulos: champions.filter((c) => c.position === 'CHAMPION').length,
@@ -43,11 +58,15 @@ export class CityHistoryService {
     };
   }
 
-  async history(id: string) {
+  async history(id: string, orgSlug?: string) {
     const city = await this.prisma.city.findUnique({ where: { id } });
     if (!city) throw new NotFoundException('Cidade não encontrada');
+    const where: any = { cityId: id };
+    if (orgSlug) {
+      where.event = { organization: { slug: orgSlug } };
+    }
     const champions = await this.prisma.champion.findMany({
-      where: { cityId: id },
+      where,
       include: {
         event: { select: { id: true, nome: true, ano: true } },
         eventSport: { select: { id: true, displayName: true } },
@@ -62,11 +81,15 @@ export class CityHistoryService {
     return grouped;
   }
 
-  async stats(id: string) {
+  async stats(id: string, orgSlug?: string) {
     const city = await this.prisma.city.findUnique({ where: { id } });
     if (!city) throw new NotFoundException('Cidade não encontrada');
+    const championWhere: any = { cityId: id };
+    if (orgSlug) {
+      championWhere.event = { organization: { slug: orgSlug } };
+    }
     const champions = await this.prisma.champion.findMany({
-      where: { cityId: id },
+      where: championWhere,
       include: { eventSport: true },
     });
     const modalidadesMaisVencedoras: Record<string, number> = {};
@@ -83,7 +106,9 @@ export class CityHistoryService {
       totalTitulos: champions.filter((c) => c.position === 'CHAMPION').length,
       totalVices: champions.filter((c) => c.position === 'RUNNER_UP').length,
       totalTerceiros: champions.filter((c) => c.position === 'THIRD_PLACE').length,
-      totalParticipacoes: await this.prisma.eventSportCity.count({ where: { cityId: id } }),
+      totalParticipacoes: await this.prisma.eventSportCity.count({
+        where: orgSlug ? { cityId: id, eventSport: { event: { organization: { slug: orgSlug } } } } : { cityId: id },
+      }),
       modalidadesMaisVencedoras: sorted,
     };
   }

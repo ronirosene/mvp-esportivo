@@ -21,7 +21,7 @@ export class AuthService {
     this.checkDb();
     const user = await this.prisma.user.findUnique({
       where: { email: dto.email },
-      include: { city: { select: { id: true, nome: true, siglaEstado: true } } },
+      include: { city: { select: { id: true, nome: true, siglaEstado: true } }, organization: { select: { id: true, nome: true, slug: true } } },
     });
 
     if (!user) throw new UnauthorizedException('Credenciais inválidas');
@@ -42,6 +42,8 @@ export class AuthService {
         role: user.role,
         cityId: user.cityId,
         city: user.city,
+        organizationId: user.organizationId,
+        organization: user.organization,
       },
     };
   }
@@ -50,9 +52,19 @@ export class AuthService {
     this.checkDb();
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
-      include: { city: { select: { id: true, nome: true, siglaEstado: true } } },
+      include: { city: { select: { id: true, nome: true, siglaEstado: true } }, organization: { select: { id: true, nome: true, slug: true } } },
     });
     if (!user) throw new UnauthorizedException('Usuário não encontrado');
-    return { id: user.id, nome: user.nome, email: user.email, role: user.role, cityId: user.cityId, city: user.city };
+    return { id: user.id, nome: user.nome, email: user.email, role: user.role, cityId: user.cityId, city: user.city, organizationId: user.organizationId, organization: user.organization };
+  }
+
+  async meOrg(userId: string) {
+    this.checkDb();
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      include: { organization: { select: { id: true, nome: true, slug: true, logoUrl: true } } },
+    });
+    if (!user) throw new UnauthorizedException('Usuário não encontrado');
+    return user.organization;
   }
 }

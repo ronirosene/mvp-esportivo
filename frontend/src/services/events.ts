@@ -9,6 +9,7 @@ export interface EventData {
   dataFim: string;
   status: 'PLANEJAMENTO' | 'EM_ANDAMENTO' | 'FINALIZADO';
   logoUrl?: string;
+  organizationId?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -26,10 +27,11 @@ export interface CreateEventPayload {
 export type UpdateEventPayload = Partial<CreateEventPayload>;
 
 export const eventsApi = {
-  list: (params?: { nome?: string; ano?: number }) => {
+  list: (params?: { nome?: string; ano?: number; orgSlug?: string }) => {
     const query = new URLSearchParams();
     if (params?.nome) query.set('nome', params.nome);
     if (params?.ano) query.set('ano', String(params.ano));
+    if (params?.orgSlug) query.set('orgSlug', params.orgSlug);
     const qs = query.toString();
     return api<EventData[]>(`/events${qs ? `?${qs}` : ''}`);
   },

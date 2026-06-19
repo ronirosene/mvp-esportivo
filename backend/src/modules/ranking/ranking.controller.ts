@@ -12,15 +12,18 @@ export class RankingController {
   @ApiQuery({ name: 'eventId', required: false })
   @ApiQuery({ name: 'sportId', required: false })
   @ApiQuery({ name: 'year', required: false })
+  @ApiQuery({ name: 'orgSlug', required: false })
   getRanking(
     @Query('eventId') eventId?: string,
     @Query('sportId') sportId?: string,
     @Query('year') year?: string,
+    @Query('orgSlug') orgSlug?: string,
   ) {
     return this.service.getRanking({
       eventId,
       sportId,
       year: year ? parseInt(year, 10) : undefined,
+      orgSlug,
     });
   }
 }

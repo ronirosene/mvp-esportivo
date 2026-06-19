@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, Query, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { SponsorsService } from './sponsors.service';
 import { CreateSponsorDto } from './dto/create-sponsor.dto';
@@ -22,8 +22,8 @@ export class SponsorsController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Listar patrocinadores (admin)' })
-  findAll() {
-    return this.service.findAll();
+  findAll(@Query('orgSlug') orgSlug?: string) {
+    return this.service.findAll(orgSlug);
   }
 
   @Get('sponsors/:id')
@@ -52,8 +52,8 @@ export class SponsorsController {
 
   @Get('public/sponsors')
   @ApiOperation({ summary: 'Listar patrocinadores ativos (público)' })
-  findPublic() {
-    return this.service.findPublic();
+  findPublic(@Query('orgSlug') orgSlug?: string) {
+    return this.service.findPublic(orgSlug);
   }
 
   @Post('public/sponsors/:id/view')

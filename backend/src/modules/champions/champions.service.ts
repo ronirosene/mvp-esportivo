@@ -42,8 +42,13 @@ export class ChampionsService {
     }
   }
 
-  async findAll() {
+  async findAll(orgSlug?: string) {
+    const where: any = {};
+    if (orgSlug) {
+      where.event = { organization: { slug: orgSlug } };
+    }
     return this.prisma.champion.findMany({
+      where,
       include: {
         event: { select: { id: true, nome: true, ano: true } },
         eventSport: { select: { id: true, displayName: true } },
@@ -77,9 +82,13 @@ export class ChampionsService {
     });
   }
 
-  async findByCity(cityId: string) {
+  async findByCity(cityId: string, orgSlug?: string) {
+    const where: any = { cityId };
+    if (orgSlug) {
+      where.event = { organization: { slug: orgSlug } };
+    }
     return this.prisma.champion.findMany({
-      where: { cityId },
+      where,
       include: {
         event: { select: { id: true, nome: true, ano: true } },
         eventSport: { select: { id: true, displayName: true } },
@@ -89,8 +98,12 @@ export class ChampionsService {
     });
   }
 
-  async cityStats(cityId: string) {
-    const champions = await this.prisma.champion.findMany({ where: { cityId } });
+  async cityStats(cityId: string, orgSlug?: string) {
+    const where: any = { cityId };
+    if (orgSlug) {
+      where.event = { organization: { slug: orgSlug } };
+    }
+    const champions = await this.prisma.champion.findMany({ where });
     return {
       totalTitulos: champions.filter((c) => c.position === 'CHAMPION').length,
       totalVices: champions.filter((c) => c.position === 'RUNNER_UP').length,

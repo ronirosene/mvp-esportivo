@@ -11,6 +11,14 @@ enum Role {
   ADMIN
   ORGANIZADOR
   CIDADE
+  ADMIN_GLOBAL
+  ADMIN_ORGANIZACAO
+}
+
+enum OrganizationPlan {
+  FREE
+  PRO
+  ENTERPRISE
 }
 
 enum RegistrationStatus {
@@ -82,18 +90,39 @@ enum ChampionPosition {
   THIRD_PLACE
 }
 
-model User {
-  id        String   @id @default(uuid()) @db.Uuid
-  nome      String
-  email     String   @unique
-  senha     String
-  role      Role     @default(ORGANIZADOR)
-  cityId    String?  @db.Uuid
-  ativo     Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+model Organization {
+  id             String           @id @default(uuid()) @db.Uuid
+  nome           String
+  slug           String           @unique
+  logoUrl        String?
+  descricao      String?
+  ativo          Boolean          @default(true)
+  plan           OrganizationPlan @default(FREE)
+  seoTitle       String?
+  seoDescription String?
+  seoFavicon     String?
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
 
-  city         City?          @relation(fields: [cityId], references: [id], onDelete: SetNull)
+  users    User[]
+  events   Event[]
+  sponsors Sponsor[]
+}
+
+model User {
+  id             String   @id @default(uuid()) @db.Uuid
+  nome           String
+  email          String   @unique
+  senha          String
+  role           Role     @default(ORGANIZADOR)
+  organizationId String?  @db.Uuid
+  cityId         String?  @db.Uuid
+  ativo          Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization?       @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  city         City?               @relation(fields: [cityId], references: [id], onDelete: SetNull)
   inviteTokens InviteToken[]
 }
 
@@ -110,20 +139,22 @@ model InviteToken {
 }
 
 model Event {
-  id         String      @id @default(uuid()) @db.Uuid
-  nome       String
-  ano        Int
-  cidadeSede String
-  dataInicio DateTime   @db.Date
-  dataFim    DateTime   @db.Date
-  status     EventStatus @default(PLANEJAMENTO)
-  logoUrl    String?
-  createdAt  DateTime    @default(now())
-  updatedAt  DateTime    @updatedAt
+  id             String      @id @default(uuid()) @db.Uuid
+  organizationId String?     @db.Uuid
+  nome           String
+  ano            Int
+  cidadeSede     String
+  dataInicio     DateTime   @db.Date
+  dataFim        DateTime   @db.Date
+  status         EventStatus @default(PLANEJAMENTO)
+  logoUrl        String?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
 
-  eventSports EventSport[]
-  teams       Team[]
-  champions   Champion[]
+  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  eventSports  EventSport[]
+  teams        Team[]
+  champions    Champion[]
 }
 
 model Sport {
@@ -316,17 +347,20 @@ enum SponsorType {
 }
 
 model Sponsor {
-  id           String       @id @default(uuid()) @db.Uuid
-  nome         String
-  logoUrl      String?
-  website      String?
-  descricao    String?
-  ativo        Boolean      @default(true)
-  destaque     Boolean      @default(false)
-  ordem        Int          @default(0)
-  tipo         SponsorType  @default(PATROCINADOR)
-  views        Int          @default(0)
-  clicks       Int          @default(0)
-  createdAt    DateTime     @default(now())
-  updatedAt    DateTime     @updatedAt
+  id             String       @id @default(uuid()) @db.Uuid
+  organizationId String?      @db.Uuid
+  nome           String
+  logoUrl        String?
+  website        String?
+  descricao      String?
+  ativo          Boolean      @default(true)
+  destaque       Boolean      @default(false)
+  ordem          Int          @default(0)
+  tipo           SponsorType  @default(PATROCINADOR)
+  views          Int          @default(0)
+  clicks         Int          @default(0)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 }
