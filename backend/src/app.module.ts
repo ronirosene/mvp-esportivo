@@ -1,4 +1,6 @@
-import { Module } from '@nestjs/common';
+import { Module, NestModule, MiddlewareConsumer } from '@nestjs/common';
+import { ThrottlerModule } from '@nestjs/throttler';
+import { APP_GUARD } from '@nestjs/core';
 import { EnvConfigModule } from './config/env.module';
 import { PrismaModule } from './modules/prisma/prisma.module';
 import { HealthModule } from './modules/health/health.module';
@@ -19,8 +21,41 @@ import { RankingModule } from './modules/ranking/ranking.module';
 import { SponsorsModule } from './modules/sponsors/sponsors.module';
 import { OrganizationsModule } from './modules/organizations/organizations.module';
 import { CityPortalModule } from './modules/city-portal/city-portal.module';
+import { ObservabilityModule } from './modules/observability/observability.module';
+import { CustomThrottlerGuard } from './common/guards/custom-throttler.guard';
+import { RequestIdMiddleware } from './common/middleware/request-id.middleware';
 
 @Module({
-  imports: [EnvConfigModule, PrismaModule, HealthModule, AuthModule, EventsModule, EventSportsModule, CitiesModule, EventSportCitiesModule, GroupsModule, MatchesModule, StandingsModule, PlayoffsModule, CompetitionFormatsModule, PublicScheduleModule, ChampionsModule, CityHistoryModule, RankingModule, SponsorsModule, OrganizationsModule, CityPortalModule],
+  imports: [
+    ThrottlerModule.forRoot([{ ttl: 60000, limit: 100 }]),
+    EnvConfigModule,
+    PrismaModule,
+    HealthModule,
+    AuthModule,
+    EventsModule,
+    EventSportsModule,
+    CitiesModule,
+    EventSportCitiesModule,
+    GroupsModule,
+    MatchesModule,
+    StandingsModule,
+    PlayoffsModule,
+    CompetitionFormatsModule,
+    PublicScheduleModule,
+    ChampionsModule,
+    CityHistoryModule,
+    RankingModule,
+    SponsorsModule,
+    OrganizationsModule,
+    CityPortalModule,
+    ObservabilityModule,
+  ],
+  providers: [
+    { provide: APP_GUARD, useClass: CustomThrottlerGuard },
+  ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(RequestIdMiddleware).forRoutes('*');
+  }
+}

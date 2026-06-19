@@ -1,6 +1,6 @@
-const CACHE_NAME = 'mvp-esportivo-v1';
-const STATIC_CACHE = 'mvp-static-v1';
-const API_CACHE = 'mvp-api-v1';
+const CACHE_NAME = 'MVP_CACHE_v2';
+const STATIC_CACHE = 'MVP_STATIC_v2';
+const API_CACHE = 'MVP_API_v2';
 
 const PRECACHE_URLS = [
   '/',
@@ -44,6 +44,12 @@ self.addEventListener('activate', (event) => {
     })
   );
   self.clients.claim();
+});
+
+self.addEventListener('message', (event) => {
+  if (event.data === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
 });
 
 function isApiRequest(url) {

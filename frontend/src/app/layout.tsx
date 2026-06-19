@@ -2,7 +2,7 @@
 
 import { Inter } from 'next/font/google';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { AuthProvider, useAuth } from '@/contexts/auth-context';
 import InstallPrompt from '@/components/install-prompt';
 import './globals.css';
@@ -101,6 +101,15 @@ function PublicHeader() {
 }
 
 function PublicLayout({ children }: { children: React.ReactNode }) {
+  const [buildInfo, setBuildInfo] = useState<{ version?: string; commit?: string }>({});
+
+  useEffect(() => {
+    fetch('/build-info.json')
+      .then((r) => r.json())
+      .then((data) => setBuildInfo(data))
+      .catch(() => {});
+  }, []);
+
   return (
     <div className="flex min-h-screen flex-col">
       <PublicHeader />
@@ -109,6 +118,11 @@ function PublicLayout({ children }: { children: React.ReactNode }) {
         <div className="mx-auto max-w-5xl px-4">
           <p>MVP Esportivo &mdash; Plataforma de gest&atilde;o de eventos esportivos</p>
           <p className="mt-1">Espa&ccedil;o reservado para patrocinadores</p>
+          {buildInfo.version && (
+            <p className="mt-2 text-[10px] opacity-50">
+              v{buildInfo.version}{buildInfo.commit ? ` \u00b7 ${buildInfo.commit}` : ''}
+            </p>
+          )}
         </div>
       </footer>
     </div>
@@ -288,7 +302,19 @@ export default function RootLayout({
     }
 
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch(() => {});
+      navigator.serviceWorker.register('/sw.js', { scope: '/', updateViaCache: 'none' }).then((reg) => {
+        reg.addEventListener('updatefound', () => {
+          const newWorker = reg.installing;
+          if (newWorker) {
+            newWorker.addEventListener('statechange', () => {
+              if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                newWorker.postMessage('SKIP_WAITING');
+                window.location.reload();
+              }
+            });
+          }
+        });
+      }).catch(() => {});
     }
   }, []);
 
