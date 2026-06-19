@@ -19,11 +19,23 @@ Monorepo (backend/ + frontend/) — sistema de gestão de eventos esportivos com
 - `npx prisma db seed` — Seed DB (ts-node, idempotent)
 - `npx nest build` — Compile TypeScript
 - `flyctl deploy --remote-only` — Deploy to Fly.io (from backend/ directory)
+- `git commit -F C:\TEMP\opencode\commit_msg.txt` — Commit via file to avoid PowerShell parsing issues
 
 ### Frontend (frontend/)
 - `npm run dev` — Next.js dev server
 - `npm run build` — Build for production
 - `npm run start` — Start production server
+- Update `frontend/public/build-info.json` with version and commit before deploy
+
+## MVP 22.5 Features
+- **Rate limiting**: public 100 req/min, login 10 req/min, admin 300 req/min (@nestjs/throttler)
+- **Request ID**: x-request-id header on all requests (request-id.middleware.ts)
+- **Logging**: method, route, status, duration, userId, organizationId (logging.interceptor.ts)
+- **Healthcheck**: database latency, version (npm_package_version), environment, uptime
+- **Error pages**: global error boundary (error.tsx), 404 (not-found.tsx)
+- **Build info**: version + commit in footer (build-info.json)
+- **PWA**: CACHE_NAME versioned (MVP_CACHE_v2), auto-update via SKIP_WAITING + window reload
+- **Observability**: ObservabilityModule skeleton for Sentry/Logtail/OpenTelemetry
 
 ## Environment
 - Copy `backend/.env.example` to `backend/.env` for local dev (postgresql://localhost:5432/mvpdatabase)
