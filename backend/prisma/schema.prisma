@@ -282,3 +282,26 @@ model Champion {
 
   @@unique([eventSportId, position])
 }
+
+enum SponsorType {
+  PATROCINADOR
+  APOIADOR
+  PARCEIRO
+  PUBLICIDADE
+}
+
+model Sponsor {
+  id           String       @id @default(uuid()) @db.Uuid
+  nome         String
+  logoUrl      String?
+  website      String?
+  descricao    String?
+  ativo        Boolean      @default(true)
+  destaque     Boolean      @default(false)
+  ordem        Int          @default(0)
+  tipo         SponsorType  @default(PATROCINADOR)
+  views        Int          @default(0)
+  clicks       Int          @default(0)
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+}

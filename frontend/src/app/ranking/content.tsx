@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { rankingApi, type RankingEntry } from '@/services/ranking';
+import SponsorsBar from '@/components/sponsors-bar';
 import { eventsApi, type EventData } from '@/services/events';
 import { sportsApi } from '@/services/sports';
 import type { SportData } from '@/services/event-sports';
@@ -165,6 +166,8 @@ export default function RankingContent() {
         <p className="font-medium">Critério de Pontuação</p>
         <p>Campeão = 5 pontos | Vice-campeão = 3 pontos | 3º Lugar = 1 ponto</p>
       </div>
+
+      <SponsorsBar className="border-t pt-6" />
     </div>
   );
 }

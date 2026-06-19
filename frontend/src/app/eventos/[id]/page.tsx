@@ -7,6 +7,7 @@ import { eventSportsApi, type EventSportData } from '@/services/event-sports';
 import { eventSportCitiesApi, type EventSportCityData } from '@/services/event-sport-cities';
 import { matchesApi } from '@/services/matches';
 import { playoffsApi } from '@/services/playoffs';
+import SponsorsBar from '@/components/sponsors-bar';
 
 const STATUS_LABEL: Record<string, string> = {
   PLANEJAMENTO: 'Planejamento',
@@ -115,6 +116,8 @@ export default function EventoPublicDetail() {
           </div>
         )}
       </div>
+
+      <SponsorsBar className="border-t pt-6" title="Patrocinadores" />
     </div>
   );
 }

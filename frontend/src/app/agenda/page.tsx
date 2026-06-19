@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { api } from '@/services/api';
 import ScheduleCard from '@/components/schedule-card';
 import ScheduleFilters from '@/components/schedule-filters';
+import SponsorsBar from '@/components/sponsors-bar';
 
 interface MatchData {
   id: string;
@@ -194,6 +195,8 @@ export default function AgendaPage() {
           )}
         </div>
       )}
+
+      <SponsorsBar className="border-t pt-6" />
     </div>
   );
 }

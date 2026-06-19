@@ -7,6 +7,7 @@ import { eventSportsApi } from '@/services/event-sports';
 import { eventSportCitiesApi } from '@/services/event-sport-cities';
 import { api } from '@/services/api';
 import { rankingApi, type RankingEntry } from '@/services/ranking';
+import SponsorsBar from '@/components/sponsors-bar';
 
 const STATUS_LABEL: Record<string, string> = {
   PLANEJAMENTO: 'Planejamento',
@@ -170,6 +171,8 @@ export default function PublicHome() {
           )
         )
       )}
+
+      <SponsorsBar className="mt-8 border-t pt-6" />
     </div>
   );
 }
