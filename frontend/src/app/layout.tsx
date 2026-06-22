@@ -173,6 +173,13 @@ function Sidebar() {
           Cidades (Usuários)
         </a>
         <a
+          href="/sports"
+          onClick={(e) => { e.preventDefault(); router.push('/sports'); }}
+          className="block rounded-md px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-muted"
+        >
+          Modalidades
+        </a>
+        <a
           href="/sponsors"
           onClick={(e) => { e.preventDefault(); router.push('/sponsors'); }}
           className="block rounded-md px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-muted"

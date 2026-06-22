@@ -240,7 +240,9 @@ const [playoffs, setPlayoffs] = useState<Record<string, MatchData[]>>({});
 
   async function handleSaveFormatConfig(eventSportId: string) {
     try {
-      const updated = await competitionFormatsApi.upsert(eventSportId, configForm);
+      const { formatType = 'GROUP_STAGE', groupCount, qualifiedPerGroup, thirdPlaceMatch, manualBracket } = configForm;
+      const payload = { formatType, groupCount, qualifiedPerGroup, thirdPlaceMatch, manualBracket };
+      const updated = await competitionFormatsApi.upsert(eventSportId, payload);
       setFormatConfig((prev) => ({ ...prev, [eventSportId]: updated }));
       setConfiguringId(null);
     } catch (err) {
