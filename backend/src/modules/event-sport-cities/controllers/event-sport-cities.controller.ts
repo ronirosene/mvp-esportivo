@@ -1,7 +1,7 @@
 import { Controller, Get, Post, Delete, Body, Param, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { EventSportCitiesService } from '../services/event-sport-cities.service';
-import { CreateEventSportCityDto } from '../dto/create-event-sport-city.dto';
+import { CreateEventSportCityDto, BulkCreateEventSportCityDto } from '../dto/create-event-sport-city.dto';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 
 @ApiTags('Event Sport Cities')
@@ -21,6 +21,14 @@ export class EventSportCitiesController {
   @ApiOperation({ summary: 'Inscrever cidade em modalidade' })
   create(@Param('eventSportId') eventSportId: string, @Body() dto: CreateEventSportCityDto) {
     return this.eventSportCitiesService.create(eventSportId, dto.cityId);
+  }
+
+  @Post('bulk')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Inscrever múltiplas cidades em uma modalidade' })
+  createBulk(@Param('eventSportId') eventSportId: string, @Body() dto: BulkCreateEventSportCityDto) {
+    return this.eventSportCitiesService.createBulk(eventSportId, dto.cityIds);
   }
 
   @Delete(':cityId')

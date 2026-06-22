@@ -26,6 +26,12 @@ export const eventSportCitiesApi = {
       body: JSON.stringify({ cityId }),
     }),
 
+  addBulk: (eventSportId: string, cityIds: string[]) =>
+    api<EventSportCityData[]>(`/event-sports/${eventSportId}/cities/bulk`, {
+      method: 'POST',
+      body: JSON.stringify({ cityIds }),
+    }),
+
   remove: (eventSportId: string, cityId: string) =>
     api<void>(`/event-sports/${eventSportId}/cities/${cityId}`, { method: 'DELETE' }),
 };

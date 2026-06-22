@@ -42,6 +42,39 @@ export class EventSportCitiesService {
     });
   }
 
+  async createBulk(eventSportId: string, cityIds: string[]) {
+    this.checkDb();
+    const eventSport = await this.prisma.eventSport.findUnique({ where: { id: eventSportId } });
+    if (!eventSport) throw new NotFoundException('Vínculo modalidade-evento não encontrado');
+
+    const existing = await this.prisma.eventSportCity.findMany({
+      where: { eventSportId, cityId: { in: cityIds } },
+      select: { cityId: true },
+    });
+    const existingIds = new Set(existing.map((e) => e.cityId));
+
+    const toCreate = cityIds.filter((id) => !existingIds.has(id));
+
+    if (toCreate.length === 0) return [];
+
+    const cities = await this.prisma.city.findMany({
+      where: { id: { in: toCreate } },
+      select: { id: true },
+    });
+    const validIds = new Set(cities.map((c) => c.id));
+    const invalidIds = toCreate.filter((id) => !validIds.has(id));
+    if (invalidIds.length > 0) {
+      throw new NotFoundException(`Cidades não encontradas: ${invalidIds.join(', ')}`);
+    }
+
+    await this.prisma.eventSportCity.createMany({
+      data: toCreate.map((cityId) => ({ eventSportId, cityId })),
+      skipDuplicates: true,
+    });
+
+    return this.findByEventSport(eventSportId);
+  }
+
   async remove(eventSportId: string, cityId: string) {
     this.checkDb();
     const esc = await this.prisma.eventSportCity.findUnique({
