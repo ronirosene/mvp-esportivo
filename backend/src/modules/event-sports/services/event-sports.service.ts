@@ -42,7 +42,7 @@ export class EventSportsService {
     if (existing) throw new ConflictException('Esta modalidade já existe no evento com este gênero e faixa etária');
 
     const eventSport = await this.prisma.eventSport.create({
-      data: { eventId, sportId, gender: g, ageCategory: a, displayName: dn, drawMode },
+      data: { eventId, sportId, gender: g, ageCategory: a, displayName: dn, ...(drawMode && { drawMode }) },
     });
     await this.prisma.competitionFormat.create({ data: { eventSportId: eventSport.id } });
 
