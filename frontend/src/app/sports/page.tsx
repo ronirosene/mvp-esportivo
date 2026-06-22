@@ -10,21 +10,35 @@ export default function SportsPage() {
   const [sports, setSports] = useState<SportData[]>([]);
   const [loading, setLoading] = useState(true);
   const [newNome, setNewNome] = useState('');
+  const [error, setError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
   async function load() {
-    try { setSports(await sportsApi.list()); } catch {}
-    finally { setLoading(false); }
+    try {
+      setSports(await sportsApi.list());
+      setError('');
+    } catch (err: any) {
+      setError(err?.message || 'Erro ao carregar modalidades');
+    } finally {
+      setLoading(false);
+    }
   }
 
   useEffect(() => { load(); }, []);
 
   async function handleCreate() {
-    if (!newNome.trim()) return;
+    if (!newNome.trim() || submitting) return;
+    setSubmitting(true);
+    setError('');
     try {
       await sportsApi.create(newNome.trim());
       setNewNome('');
       await load();
-    } catch {}
+    } catch (err: any) {
+      setError(err?.message || 'Erro ao criar modalidade');
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   async function handleRemove(id: string) {
@@ -32,7 +46,9 @@ export default function SportsPage() {
     try {
       await sportsApi.remove(id);
       await load();
-    } catch {}
+    } catch (err: any) {
+      setError(err?.message || 'Erro ao desativar modalidade');
+    }
   }
 
   return (
@@ -40,6 +56,9 @@ export default function SportsPage() {
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold tracking-tight">Catálogo de Modalidades</h1>
       </div>
+
+      {error && <p className="text-sm text-destructive">{error}</p>}
+
       <div className="flex gap-2">
         <input
           className="flex-1 rounded-md border bg-background px-3 py-2 text-sm"
@@ -49,10 +68,11 @@ export default function SportsPage() {
           onKeyDown={(e) => e.key === 'Enter' && handleCreate()}
         />
         <button
-          className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+          className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
           onClick={handleCreate}
+          disabled={submitting}
         >
-          Adicionar
+          {submitting ? 'Adicionando...' : 'Adicionar'}
         </button>
       </div>
       {loading ? (

@@ -203,7 +203,7 @@ export default function GroupMatchesPage() {
         <Button variant="outline" onClick={() => router.push(`/events/${params.id}`)}>Voltar</Button>
       </div>
 
-      {isManual && token && (
+      {token && (
         <Card>
           <CardHeader>
             <CardTitle className="text-lg">Participantes do Grupo</CardTitle>
@@ -249,7 +249,7 @@ export default function GroupMatchesPage() {
         {(!isManual) && (
           <Button onClick={handleGenerate}>Gerar Partidas</Button>
         )}
-        {isManual && token && (
+        {token && (
           <Button onClick={() => setShowManualForm(!showManualForm)}>
             {showManualForm ? 'Cancelar' : 'Criar Partida'}
           </Button>
@@ -259,7 +259,7 @@ export default function GroupMatchesPage() {
         )}
       </div>
 
-      {isManual && showManualForm && (
+      {showManualForm && (
         <Card>
           <CardHeader>
             <CardTitle className="text-lg">Nova Partida</CardTitle>

@@ -26,10 +26,10 @@ export const eventSportsApi = {
   list: (eventId: string) =>
     api<EventSportData[]>(`/events/${eventId}/sports`),
 
-  add: (eventId: string, sportId: string, gender?: string, ageCategory?: string, displayName?: string) =>
+  add: (eventId: string, sportId: string, gender?: string, ageCategory?: string, displayName?: string, drawMode?: string) =>
     api<EventSportData>(`/events/${eventId}/sports`, {
       method: 'POST',
-      body: JSON.stringify({ sportId, gender, ageCategory, displayName }),
+      body: JSON.stringify({ sportId, gender, ageCategory, displayName, drawMode }),
     }),
 
   remove: (eventId: string, sportId: string) =>

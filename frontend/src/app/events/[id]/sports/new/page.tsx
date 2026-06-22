@@ -37,24 +37,45 @@ export default function AddSportPage() {
   const [gender, setGender] = useState('OPEN');
   const [ageCategory, setAgeCategory] = useState('LIVRE');
   const [displayName, setDisplayName] = useState('');
+  const [drawMode, setDrawMode] = useState('AUTOMATIC');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     async function load() {
-      try { setSports(await sportsApi.list()); } catch {}
-      finally { setLoading(false); }
+      try {
+        setSports(await sportsApi.list());
+        setError('');
+      } catch (err: any) {
+        setError(err?.message || 'Erro ao carregar modalidades');
+      } finally {
+        setLoading(false);
+      }
     }
     load();
   }, []);
 
-  async function handleAdd() {
+  useEffect(() => {
     if (!selectedSportId) return;
+    const sport = sports.find(s => s.id === selectedSportId);
+    if (!sport) return;
+    const gl = GENDER_OPTIONS.find(o => o.value === gender)?.label || '';
+    const al = AGE_OPTIONS.find(o => o.value === ageCategory)?.label || '';
+    setDisplayName([sport.nome, gl, al].filter(Boolean).join(' '));
+  }, [gender, ageCategory, selectedSportId, sports]);
+
+  async function handleAdd() {
+    if (!selectedSportId || submitting) return;
+    setSubmitting(true);
+    setError('');
     try {
-      await eventSportsApi.add(params.id as string, selectedSportId, gender, ageCategory, displayName || undefined);
+      await eventSportsApi.add(params.id as string, selectedSportId, gender, ageCategory, displayName || undefined, drawMode);
       router.push(`/events/${params.id}`);
     } catch (err: any) {
       setError(err?.message || 'Erro ao adicionar modalidade');
+    } finally {
+      setSubmitting(false);
     }
   }
 
@@ -69,7 +90,7 @@ export default function AddSportPage() {
 
       {error && <p className="text-sm text-destructive">{error}</p>}
 
-      <div className="grid gap-3 sm:grid-cols-3">
+      <div className="grid gap-3 sm:grid-cols-4">
         <div>
           <label className="mb-1 block text-xs font-medium text-muted-foreground">Gênero</label>
           <select className="w-full rounded-md border bg-background px-3 py-2 text-sm" value={gender} onChange={(e) => setGender(e.target.value)}>
@@ -86,6 +107,13 @@ export default function AddSportPage() {
           <label className="mb-1 block text-xs font-medium text-muted-foreground">Nome de Exibição</label>
           <input className="w-full rounded-md border bg-background px-3 py-2 text-sm" placeholder="Ex: Futsal Masculino Sub-14" value={displayName} onChange={(e) => setDisplayName(e.target.value)} />
         </div>
+        <div>
+          <label className="mb-1 block text-xs font-medium text-muted-foreground">Tipo de Sorteio</label>
+          <select className="w-full rounded-md border bg-background px-3 py-2 text-sm" value={drawMode} onChange={(e) => setDrawMode(e.target.value)}>
+            <option value="AUTOMATIC">Automático</option>
+            <option value="MANUAL">Manual</option>
+          </select>
+        </div>
       </div>
 
       {sports.length === 0 ? (
@@ -96,10 +124,7 @@ export default function AddSportPage() {
             <Card
               key={sport.id}
               className={`cursor-pointer transition-colors hover:bg-accent ${selectedSportId === sport.id ? 'ring-2 ring-primary' : ''}`}
-              onClick={() => {
-                setSelectedSportId(sport.id);
-                if (!displayName) setDisplayName(sport.nome + ' ' + GENDER_OPTIONS.find(o => o.value === gender)?.label + ' ' + AGE_OPTIONS.find(o => o.value === ageCategory)?.label);
-              }}
+              onClick={() => setSelectedSportId(sport.id)}
             >
               <CardHeader>
                 <CardTitle className="text-base">{sport.nome}</CardTitle>
@@ -109,8 +134,8 @@ export default function AddSportPage() {
         </div>
       )}
 
-      <Button disabled={!selectedSportId} onClick={handleAdd}>
-        Vincular Modalidade
+      <Button disabled={!selectedSportId || submitting} onClick={handleAdd}>
+        {submitting ? 'Vinculando...' : 'Vincular Modalidade'}
       </Button>
     </div>
   );

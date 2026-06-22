@@ -23,7 +23,7 @@ export class EventSportsService {
     });
   }
 
-  async create(eventId: string, sportId: string, gender?: Gender, ageCategory?: AgeCategory, displayName?: string) {
+  async create(eventId: string, sportId: string, gender?: Gender, ageCategory?: AgeCategory, displayName?: string, drawMode?: any) {
     this.checkDb();
     const event = await this.prisma.event.findUnique({ where: { id: eventId } });
     if (!event) throw new NotFoundException('Evento não encontrado');
@@ -42,7 +42,7 @@ export class EventSportsService {
     if (existing) throw new ConflictException('Esta modalidade já existe no evento com este gênero e faixa etária');
 
     const eventSport = await this.prisma.eventSport.create({
-      data: { eventId, sportId, gender: g, ageCategory: a, displayName: dn },
+      data: { eventId, sportId, gender: g, ageCategory: a, displayName: dn, drawMode },
     });
     await this.prisma.competitionFormat.create({ data: { eventSportId: eventSport.id } });
 
